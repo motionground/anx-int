@@ -115,6 +115,18 @@ class AppController {
           window.location.hash = "#dashboard";
           return;
         }
+        if (hash === "assessment") {
+          const assessments = DB.getAssessments(this.currentUser.email);
+          if (assessments.length > 0) {
+            const latest = assessments[assessments.length - 1];
+            const nextCheckinTime = latest.timestamp + (7 * 24 * 60 * 60 * 1000);
+            if (Date.now() < nextCheckinTime) {
+              alert(`Your next assessment is scheduled for ${new Date(nextCheckinTime).toLocaleDateString()}. You cannot check in until that date.`);
+              window.location.hash = "#dashboard";
+              return;
+            }
+          }
+        }
       }
     }
 
@@ -271,12 +283,17 @@ class AppController {
     const safetyBanner = document.getElementById("clinical-safety-banner");
     
     // Check if there are assessments
+    const logBtn = document.getElementById("dash-log-btn");
+    const checkinDesc = document.getElementById("dash-next-checkin-desc");
+
     if (assessments.length === 0) {
       document.getElementById("dash-latest-score").innerText = "--";
       document.getElementById("dash-latest-severity").innerText = "No assessment logged";
       document.getElementById("dash-latest-severity").className = "severity-indicator";
-      document.getElementById("dash-latest-date").innerText = "Please complete your first assessment to begin study tracks.";
+      document.getElementById("dash-latest-date").innerText = "Please complete your baseline assessment.";
       document.getElementById("dash-next-checkin-val").innerText = "Immediate";
+      if (checkinDesc) checkinDesc.innerText = "Please complete your first assessment to begin study tracks.";
+      if (logBtn) logBtn.removeAttribute("disabled");
       reminderBanner.style.display = "block";
       safetyBanner.style.display = "none";
       
@@ -297,17 +314,22 @@ class AppController {
     document.getElementById("dash-latest-date").innerText = `Completed on: ${formattedDate}`;
 
     // Manage Check-in Reminder: 7 days interval check
-    const diffTime = Date.now() - latest.timestamp;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const nextCheckinTime = latest.timestamp + (7 * 24 * 60 * 60 * 1000);
+    const nextCheckinDate = new Date(nextCheckinTime);
+    const nextCheckinDateString = nextCheckinDate.toLocaleDateString();
+    const isOverdue = Date.now() >= nextCheckinTime;
     
-    if (diffDays >= 7) {
-      document.getElementById("dash-next-checkin-val").innerText = "Check-in Overdue";
-      document.getElementById("dash-next-checkin-val").style.color = "var(--alert-red)";
+    if (isOverdue) {
+      document.getElementById("dash-next-checkin-val").innerText = `${nextCheckinDateString} (Open Now)`;
+      document.getElementById("dash-next-checkin-val").style.color = "var(--accent-sage)";
+      if (checkinDesc) checkinDesc.innerText = "Your weekly check-in is open. You may log your assessment.";
+      if (logBtn) logBtn.removeAttribute("disabled");
       reminderBanner.style.display = "block";
     } else {
-      const remainingDays = 7 - Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      document.getElementById("dash-next-checkin-val").innerText = `In ${remainingDays} day(s)`;
+      document.getElementById("dash-next-checkin-val").innerText = nextCheckinDateString;
       document.getElementById("dash-next-checkin-val").style.color = "var(--text-primary)";
+      if (checkinDesc) checkinDesc.innerText = "You cannot log another assessment until the scheduled date.";
+      if (logBtn) logBtn.setAttribute("disabled", "disabled");
       reminderBanner.style.display = "none";
     }
 

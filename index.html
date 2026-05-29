@@ -59,7 +59,7 @@
           <div class="form-group" id="group-study-code">
             <label for="auth-study-code">Participant ID or Study Code</label>
             <input type="text" id="auth-study-code" required placeholder="e.g., P-401 or admin code">
-            <p class="slider-desc" style="margin-top: 0.25rem;">Use your researcher-assigned ID, or use <strong>RESEARCHER-2026</strong> for administrator mode.</p>
+            <p class="slider-desc" style="margin-top: 0.25rem;">Please use a random number as your Participant ID (e.g., 4059), or use <strong>RESEARCHER-2026</strong> for administrator mode.</p>
           </div>
 
           <div class="btn-group">
@@ -158,8 +158,8 @@
           <div class="dashboard-section">
             <span class="dashboard-section-title">Next Check-In Scheduled</span>
             <div id="dash-next-checkin-val" style="font-size: 1.1rem; font-weight: 500;">--</div>
-            <p class="slider-desc">Assessments are tracked weekly to update recommendation paths.</p>
-            <button class="btn btn-small" onclick="app.navigateTo('assessment')">Log Assessment</button>
+            <p class="slider-desc" id="dash-next-checkin-desc">Assessments are tracked weekly to update recommendation paths.</p>
+            <button class="btn btn-small" id="dash-log-btn" onclick="app.navigateTo('assessment')">Log Assessment</button>
           </div>
         </div>
 
