@@ -770,9 +770,19 @@ li {
   }
   nav {
     width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 1rem;
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.5rem;
+    gap: 1.2rem;
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+  }
+  nav::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Safari/Chrome */
+  }
+  nav a, nav button {
+    flex-shrink: 0;
   }
   main {
     padding: 1.5rem 1rem;
