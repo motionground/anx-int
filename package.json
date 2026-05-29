@@ -1,0 +1,13 @@
+{
+  "name": "anx-int-research-app",
+  "version": "1.0.0",
+  "description": "Digital anxiety intervention research study platform",
+  "main": "index.html",
+  "scripts": {
+    "dev": "http-server -p 3000 -o"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

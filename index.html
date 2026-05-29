@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anxiety Intervention Study | Academic Digital Support Tool</title>
+  <meta name="description" content="A transparent, rule-based digital anxiety support tool using GAD-7 and behavioral indicators. Built for clinical and research purposes.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="app">
+    <!-- Header Navigation -->
+    <header class="no-print">
+      <div class="header-container">
+        <a href="#landing" class="brand" id="nav-brand">
+          ANX-INT
+          <span class="brand-sub">Intervention Study</span>
+        </a>
+        <nav id="main-nav">
+          <!-- Populated dynamically via app.js -->
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main>
+      
+      <!-- 1. LANDING PAGE -->
+      <section id="view-landing" class="view active">
+        <h1>A transparent, rule-based digital anxiety support tool using GAD-7 and behavioural indicators.</h1>
+        <p>This web application is part of an academic research project evaluating the effectiveness of adaptive, rules-guided self-help interventions. Unlike machine learning algorithms, this platform uses open, explainable rules to provide coping strategies based on your reported anxiety levels and behavioral indicators.</p>
+        
+        <div class="alert-box">
+          <div class="alert-box-title">Research Disclaimer</div>
+          <p>This tool is for research and self-support only. It does not provide a medical diagnosis, clinical treatment, or replace professional mental health care. All data collected is strictly anonymized under research code compliance.</p>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn" onclick="app.navigateTo('auth', 'signup')">Register Participant Account</button>
+          <button class="btn btn-secondary" onclick="app.navigateTo('auth', 'login')">Participant Login</button>
+        </div>
+      </section>
+
+      <!-- 2. SIGN-UP / LOGIN PAGE -->
+      <section id="view-auth" class="view">
+        <h1 id="auth-title">Create Participant Account</h1>
+        <p id="auth-desc">Enter your email and code details below. Your personal identity is kept minimal for privacy compliance.</p>
+
+        <form id="auth-form" onsubmit="app.handleAuthSubmit(event)">
+          <div class="form-group">
+            <label for="auth-email">Email Address</label>
+            <input type="email" id="auth-email" required placeholder="name@email.com">
+          </div>
+          <div class="form-group">
+            <label for="auth-password">Password</label>
+            <input type="password" id="auth-password" required placeholder="Choose a secure password">
+          </div>
+          <div class="form-group" id="group-study-code">
+            <label for="auth-study-code">Participant ID or Study Code</label>
+            <input type="text" id="auth-study-code" required placeholder="e.g., P-401 or admin code">
+            <p class="slider-desc" style="margin-top: 0.25rem;">Use your researcher-assigned ID, or use <strong>RESEARCHER-2026</strong> for administrator mode.</p>
+          </div>
+
+          <div class="btn-group">
+            <button type="submit" class="btn" id="auth-submit-btn">Register</button>
+            <button type="button" class="btn btn-secondary" id="auth-toggle-btn" onclick="app.toggleAuthMode()">Already registered? Login</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- 3. CONSENT PAGE -->
+      <section id="view-consent" class="view">
+        <h1>Participant Informed Consent</h1>
+        <p>Please review the terms of this study carefully before joining the anxiety intervention research trial.</p>
+
+        <div class="spacious-list" style="border: 1px solid var(--border-color); padding: 1.5rem; background-color: var(--bg-primary); max-height: 350px; overflow-y: auto; margin-bottom: 2rem;">
+          <h3>1. Study Purpose</h3>
+          <p>The goal is to study how transparent, rule-based algorithms adapt recommendations over time based on anxiety scoring and self-reported behaviors.</p>
+          
+          <h3>2. Privacy & Data Integrity</h3>
+          <p>We log GAD-7 inputs, sleep, avoidance, irritability, coping confidence, and intervention completion rates. Email addresses are encrypted client-side. No detailed diagnostic data is shared outside of secure, aggregated spreadsheets.</p>
+          
+          <h3>3. Clinical Safety Notice</h3>
+          <p>This software is not an emergency psychiatric intervention. If you report severe distress or score high on scale thresholds, you will receive resources for emergency services. The platform cannot replace an emergency triage or clinical evaluation by a medical doctor.</p>
+          
+          <h3>4. Voluntary Participation</h3>
+          <p>You can withdraw at any time. You may also download your complete history in CSV format or request account deletion.</p>
+        </div>
+
+        <form id="consent-form" onsubmit="app.handleConsentSubmit(event)">
+          <div class="consent-item">
+            <input type="checkbox" id="consent-check-1" required>
+            <label for="consent-check-1">I voluntary agree to participate in this anxiety intervention research study.</label>
+          </div>
+          <div class="consent-item">
+            <input type="checkbox" id="consent-check-2" required>
+            <label for="consent-check-2">I allow my anonymized weekly assessment, journal counts, and feedback entries to be processed for research analysis.</label>
+          </div>
+          <div class="consent-item">
+            <input type="checkbox" id="consent-check-3" required>
+            <label for="consent-check-3">I understand that this tool is not a medical diagnostic service or a replacement for professional clinical care.</label>
+          </div>
+
+          <div class="btn-group">
+            <button type="submit" class="btn" id="consent-submit-btn">Accept Consent & Continue</button>
+            <button type="button" class="btn btn-secondary" onclick="app.logout()">Decline & Log Out</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- 4. USER DASHBOARD -->
+      <section id="view-dashboard" class="view">
+        <div class="flex-row-space" style="margin-bottom: 2rem;">
+          <div>
+            <h1 style="margin-bottom: 0.25rem;">Participant Dashboard</h1>
+            <p>Welcome back, Participant <span id="dash-participant-id" style="font-weight: 600;">...</span></p>
+          </div>
+          <div>
+            <button class="btn btn-secondary btn-small" onclick="app.exportPersonalCSV()">Export My CSV</button>
+          </div>
+        </div>
+
+        <!-- Weekly Check-in Banner Reminder -->
+        <div id="checkin-reminder-banner" class="alert-box" style="border-color: var(--accent-sage); background-color: var(--accent-sage-light); display: none;">
+          <div class="alert-box-title" style="color: var(--accent-sage); display: flex; align-items: center; gap: 0.5rem;">
+            <span>●</span> Weekly Assessment is Due
+          </div>
+          <p>It has been 7 or more days since your last tracking session. Please complete your check-in to update your recommendations.</p>
+          <button class="btn btn-small" onclick="app.navigateTo('assessment')" style="width: fit-content; margin-top: 0.5rem;">Start Weekly Assessment</button>
+        </div>
+
+        <!-- Clinical Safety Banner for High Scores -->
+        <div id="clinical-safety-banner" class="alert-box danger" style="display: none;">
+          <div class="alert-box-title">Safety Alert: Elevated Distress Detected</div>
+          <p>Your recent assessment scores reflect severe anxiety levels. This program is for support only. Please seek immediate support from professional services or crisis services.</p>
+          <button class="btn btn-danger btn-small" onclick="app.navigateTo('safety')" style="width: fit-content; margin-top: 0.5rem;">Get Crisis Resources</button>
+        </div>
+
+        <!-- Statistics Grid -->
+        <div class="dashboard-grid">
+          <div class="dashboard-section">
+            <span class="dashboard-section-title">Latest Anxiety Severity</span>
+            <div class="stat-large" id="dash-latest-score">--</div>
+            <div>
+              <span class="severity-indicator" id="dash-latest-severity">No assessment logged</span>
+            </div>
+            <div class="slider-desc" id="dash-latest-date">--</div>
+          </div>
+
+          <div class="dashboard-section">
+            <span class="dashboard-section-title">Indicators At A Glance</span>
+            <ul style="padding-left: 1.2rem; font-size: 0.9rem;" id="dash-indicators-list">
+              <li>Please submit your first assessment.</li>
+            </ul>
+          </div>
+
+          <div class="dashboard-section">
+            <span class="dashboard-section-title">Next Check-In Scheduled</span>
+            <div id="dash-next-checkin-val" style="font-size: 1.1rem; font-weight: 500;">--</div>
+            <p class="slider-desc">Assessments are tracked weekly to update recommendation paths.</p>
+            <button class="btn btn-small" onclick="app.navigateTo('assessment')">Log Assessment</button>
+          </div>
+        </div>
+
+        <!-- Active Recommendations Panel -->
+        <div class="dashboard-section" style="margin-bottom: 2rem;">
+          <div class="flex-row-space" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+            <span class="dashboard-section-title" style="border: none; margin: 0; padding: 0;">Recommended Interventions</span>
+            <button class="btn btn-secondary btn-small" onclick="app.navigateTo('rules-logic')">How rules work</button>
+          </div>
+          
+          <p id="no-recs-placeholder" style="display: block;">No active recommendations. Please submit an assessment to generate coping activities.</p>
+          <div id="dashboard-recs-list" class="spacious-list" style="display: none;">
+            <!-- Rendered in app.js -->
+          </div>
+        </div>
+
+        <!-- Coping and History Shortcut Grid -->
+        <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
+          <div class="dashboard-section">
+            <span class="dashboard-section-title">Mood Journal & Triggers</span>
+            <div id="dash-recent-journal" class="slider-desc" style="margin-bottom: 0.5rem;">
+              No recent entries.
+            </div>
+            <div class="btn-group" style="margin-top: auto;">
+              <button class="btn btn-secondary btn-small" onclick="app.navigateTo('progress')">Log Mood / View Journal</button>
+            </div>
+          </div>
+
+          <div class="dashboard-section">
+            <span class="dashboard-section-title">Personal Coping Plan</span>
+            <p class="slider-desc" id="dash-coping-status">Your plan has not been filled out yet.</p>
+            <div class="btn-group" style="margin-top: auto;">
+              <button class="btn btn-secondary btn-small" onclick="app.navigateTo('progress')">Edit Coping Plan</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. WEEKLY ASSESSMENT PAGE -->
+      <section id="view-assessment" class="view">
+        <h1>Weekly Anxiety Check-In</h1>
+        <p>Over the <strong>last 7 days</strong>, how often have you been bothered by the following problems? Please respond honestly.</p>
+
+        <form id="assessment-form" onsubmit="app.handleAssessmentSubmit(event)">
+          <!-- GAD-7 Section -->
+          <h2>Part 1: GAD-7 Anxiety Questionnaire</h2>
+          <div style="overflow-x: auto; margin-bottom: 2rem;">
+            <table class="gad7-table">
+              <thead>
+                <tr>
+                  <th>Anxiety Symptom</th>
+                  <th style="text-align: center;">Not at all (0)</th>
+                  <th style="text-align: center;">Several days (1)</th>
+                  <th style="text-align: center;">More than half the days (2)</th>
+                  <th style="text-align: center;">Nearly every day (3)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1. Feeling nervous, anxious or on edge</td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q1" value="0" required></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q1" value="1"></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q1" value="2"></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q1" value="3"></td>
+                </tr>
+                <tr>
+                  <td>2. Not being able to stop or control worrying</td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q2" value="0" required></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q2" value="1"></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q2" value="2"></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q2" value="3"></td>
+                </tr>
+                <tr>
+                  <td>3. Worrying too much about different things</td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q3" value="0" required></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q3" value="1"></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q3" value="2"></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q3" value="3"></td>
+                </tr>
+                <tr>
+                  <td>4. Trouble relaxing</td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q4" value="0" required></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q4" value="1"></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q4" value="2"></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q4" value="3"></td>
+                </tr>
+                <tr>
+                  <td>5. Being so restless that it is hard to sit still</td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q5" value="0" required></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q5" value="1"></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q5" value="2"></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q5" value="3"></td>
+                </tr>
+                <tr>
+                  <td>6. Becoming easily annoyed or irritable</td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q6" value="0" required></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q6" value="1"></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q6" value="2"></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q6" value="3"></td>
+                </tr>
+                <tr>
+                  <td>7. Feeling afraid as if something awful might happen</td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q7" value="0" required></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q7" value="1"></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q7" value="2"></td>
+                  <td class="radio-cell"><input type="radio" name="gad7_q7" value="3"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Behavioural Indicators Section -->
+          <h2>Part 2: Behavioural & Functioning Indicators</h2>
+          <p>Please rate the following indicators of your daily routine and mental state over the past 7 days.</p>
+
+          <!-- 1. Sleep Quality -->
+          <div class="slider-group">
+            <div class="slider-header">
+              <span class="slider-label">Sleep Quality</span>
+              <span class="slider-value" id="val-sleep">5</span>
+            </div>
+            <p class="slider-desc">Rate the depth, ease of falling asleep, and restorativeness of your rest.</p>
+            <div class="slider-input-wrapper">
+              <input type="range" id="ind-sleep" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('sleep', this.value)">
+            </div>
+            <div class="slider-bounds">
+              <span>0 (Fragmented/Poor)</span>
+              <span>10 (Fully Rested)</span>
+            </div>
+          </div>
+
+          <!-- 2. Avoidance Behavior -->
+          <div class="slider-group">
+            <div class="slider-header">
+              <span class="slider-label">Avoidance Behaviour</span>
+              <span class="slider-value" id="val-avoidance">5</span>
+            </div>
+            <p class="slider-desc">To what degree did you actively avoid tasks, places, conversations, or situations that make you anxious?</p>
+            <div class="slider-input-wrapper">
+              <input type="range" id="ind-avoidance" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('avoidance', this.value)">
+            </div>
+            <div class="slider-bounds">
+              <span>0 (None)</span>
+              <span>10 (Severe Avoidance)</span>
+            </div>
+          </div>
+
+          <!-- 3. Concentration -->
+          <div class="slider-group">
+            <div class="slider-header">
+              <span class="slider-label">Focus & Concentration</span>
+              <span class="slider-value" id="val-concentration">5</span>
+            </div>
+            <p class="slider-desc">How well could you focus on work, reading, or structured tasks without distraction?</p>
+            <div class="slider-input-wrapper">
+              <input type="range" id="ind-concentration" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('concentration', this.value)">
+            </div>
+            <div class="slider-bounds">
+              <span>0 (Extremely Distracted)</span>
+              <span>10 (Perfect Focus)</span>
+            </div>
+          </div>
+
+          <!-- 4. Irritability -->
+          <div class="slider-group">
+            <div class="slider-header">
+              <span class="slider-label">Irritability & Frustration</span>
+              <span class="slider-value" id="val-irritability">5</span>
+            </div>
+            <p class="slider-desc">How quickly did you experience frustration, annoyance, or low temper thresholds?</p>
+            <div class="slider-input-wrapper">
+              <input type="range" id="ind-irritability" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('irritability', this.value)">
+            </div>
+            <div class="slider-bounds">
+              <span>0 (Composed)</span>
+              <span>10 (Highly Irritable)</span>
+            </div>
+          </div>
+
+          <!-- 5. Physical Tension -->
+          <div class="slider-group">
+            <div class="slider-header">
+              <span class="slider-label">Physical Body Tension</span>
+              <span class="slider-value" id="val-tension">5</span>
+            </div>
+            <p class="slider-desc">Rate bodily stress indicators: muscle tightness, jaw clenching, headaches, or rapid heartbeat.</p>
+            <div class="slider-input-wrapper">
+              <input type="range" id="ind-tension" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('tension', this.value)">
+            </div>
+            <div class="slider-bounds">
+              <span>0 (Relaxed muscles)</span>
+              <span>10 (Constant Rigidity)</span>
+            </div>
+          </div>
+
+          <!-- 6. Social Withdrawal -->
+          <div class="slider-group">
+            <div class="slider-header">
+              <span class="slider-label">Social Withdrawal</span>
+              <span class="slider-value" id="val-withdrawal">5</span>
+            </div>
+            <p class="slider-desc">Did you isolate yourself, skip social calls, or decline community/friend contact because of low mental energy?</p>
+            <div class="slider-input-wrapper">
+              <input type="range" id="ind-withdrawal" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('withdrawal', this.value)">
+            </div>
+            <div class="slider-bounds">
+              <span>0 (Fully connected)</span>
+              <span>10 (Total Isolation)</span>
+            </div>
+          </div>
+
+          <!-- 7. Daily Functioning -->
+          <div class="slider-group">
+            <div class="slider-header">
+              <span class="slider-label">Daily Functioning & Chores</span>
+              <span class="slider-value" id="val-functioning">5</span>
+            </div>
+            <p class="slider-desc">How easily could you manage household tasks, physical hygiene, meal prep, and job duties?</p>
+            <div class="slider-input-wrapper">
+              <input type="range" id="ind-functioning" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('functioning', this.value)">
+            </div>
+            <div class="slider-bounds">
+              <span>0 (Inability to act)</span>
+              <span>10 (Efficient/Capable)</span>
+            </div>
+          </div>
+
+          <!-- 8. Coping Confidence -->
+          <div class="slider-group">
+            <div class="slider-header">
+              <span class="slider-label">Coping Confidence</span>
+              <span class="slider-value" id="val-confidence">5</span>
+            </div>
+            <p class="slider-desc">How confident do you feel in your ability to manage anxious sensations or spikes in stress?</p>
+            <div class="slider-input-wrapper">
+              <input type="range" id="ind-confidence" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('confidence', this.value)">
+            </div>
+            <div class="slider-bounds">
+              <span>0 (Helpless)</span>
+              <span>10 (Resilient/Capable)</span>
+            </div>
+          </div>
+
+          <!-- 9. Text Inputs for Triggers -->
+          <div class="form-group">
+            <label for="ind-triggers">Daily Stress Triggers</label>
+            <input type="text" id="ind-triggers" placeholder="e.g., job deadlines, social event, caffeine intake, poor sleep">
+            <p class="slider-desc">Identify any key events or physiological inputs that triggered spikes in anxiety this week.</p>
+          </div>
+
+          <!-- 10. Support Seeking -->
+          <div class="form-group">
+            <label for="ind-support">Support-Seeking Behaviour</label>
+            <select id="ind-support">
+              <option value="No">No support sought this week</option>
+              <option value="Yes, spoke to family/friend">Yes, spoke to a family member or friend</option>
+              <option value="Yes, spoke to healthcare professional">Yes, spoke to a doctor, counselor, or helpline</option>
+            </select>
+            <p class="slider-desc">Did you actively seek external support to process your distress?</p>
+          </div>
+
+          <!-- Submission Button -->
+          <div class="btn-group">
+            <button type="submit" class="btn">Submit Assessment</button>
+            <button type="button" class="btn btn-secondary" onclick="app.navigateTo('dashboard')">Cancel</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- 6. RESULTS PAGE -->
+      <section id="view-results" class="view">
+        <h1>Assessment Results</h1>
+        <p>Thank you for submitting your weekly parameters. Your scores have been processed using our transparent clinical logic rules.</p>
+
+        <div class="dashboard-grid" style="margin-bottom: 2rem;">
+          <div class="dashboard-section">
+            <span class="dashboard-section-title">Your Total GAD-7 Score</span>
+            <div class="stat-large" id="results-score-val">--</div>
+            <div>
+              <span class="severity-indicator" id="results-severity-badge">--</span>
+            </div>
+          </div>
+
+          <div class="dashboard-section">
+            <span class="dashboard-section-title">Flagged Indicators</span>
+            <ul style="padding-left: 1.2rem; font-size: 0.9rem;" id="results-flags-list">
+              <!-- Rendered in app.js -->
+            </ul>
+          </div>
+        </div>
+
+        <div class="dashboard-section" style="margin-bottom: 2rem;">
+          <span class="dashboard-section-title">Adaptive Interventions Prescribed</span>
+          <div id="results-recs-container" class="spacious-list">
+            <!-- Rendered in app.js -->
+          </div>
+        </div>
+
+        <!-- Safety box if score >= 15 -->
+        <div id="results-safety-box" class="alert-box danger" style="display: none;">
+          <div class="alert-box-title">Required Clinical Notice</div>
+          <p>Because your score indicates severe levels of anxiety, we urge you to consult your medical clinician or mental health provider. NHS 111, GP consultation, or local support lines are available.</p>
+          <button class="btn btn-danger btn-small" onclick="app.navigateTo('safety')">Safety Resources & Grounding Tools</button>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn" onclick="app.navigateTo('dashboard')">Proceed to Dashboard</button>
+          <button class="btn btn-secondary" onclick="app.navigateTo('progress')">View My Progress Trends</button>
+        </div>
+      </section>
+
+      <!-- 7. PROGRESS PAGE -->
+      <section id="view-progress" class="view">
+        <h1>Anxiety & Behavioural Progress</h1>
+        <p>Monitor your symptom patterns over the course of the research study. Consistent entries improve evaluation accuracy.</p>
+
+        <!-- Trend Graph SVG -->
+        <h3>GAD-7 Score History Graph</h3>
+        <div id="progress-graph-wrapper" class="trend-svg-container">
+          <!-- Populated by dynamic SVG in app.js -->
+        </div>
+
+        <!-- Sub-trends and completed list -->
+        <div class="dashboard-grid" style="margin-top: 2rem;">
+          <div class="dashboard-section">
+            <span class="dashboard-section-title">Progress Analysis Summary</span>
+            <p id="progress-analysis-txt" style="font-size: 0.95rem;">Please complete more than one assessment to generate trends.</p>
+            <p id="progress-focus-areas" class="slider-value" style="font-size: 0.85rem; text-transform: none; font-weight: normal; color: var(--alert-red);"></p>
+          </div>
+
+          <div class="dashboard-section">
+            <span class="dashboard-section-title">Activity Completions</span>
+            <ul style="padding-left: 1.2rem; font-size: 0.9rem;" id="progress-completions-list">
+              <li>No activities recorded completed.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Personal Coping Plan Editor -->
+        <h2>My Personalized Coping Plan</h2>
+        <p>A static coping plan serves as a cognitive anchor when feeling spikes of intense anxiety. Edit and reference yours below.</p>
+        <form id="coping-plan-form" onsubmit="app.handleCopingSubmit(event)" style="border: 1px solid var(--border-color); padding: 1.5rem; margin-bottom: 2rem;">
+          <div class="form-group">
+            <label for="coping-triggers">Known Triggers (Internal/External)</label>
+            <textarea id="coping-triggers" rows="3" placeholder="e.g., tight work deadlines, dehydration, thinking about upcoming social events"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="coping-strategies">Active Coping Strategies (E.g. breathing, walk, reframing)</label>
+            <textarea id="coping-strategies" rows="3" placeholder="e.g., 5 minutes of box breathing, call my support contact, walk around the block"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="coping-supports">My Emergency/Support Contacts</label>
+            <textarea id="coping-supports" rows="2" placeholder="e.g., Sarah (Friend): 07700 900077, Dr. Jones (GP): 020 7946 0958"></textarea>
+          </div>
+          <button type="submit" class="btn btn-secondary btn-small">Save Coping Plan</button>
+        </form>
+
+        <!-- Mood & Trigger Journal Form -->
+        <h2>Daily Mood & Trigger Journal</h2>
+        <p>Record daily observations, sleep triggers, and micro-reflections. These journal notes do not change your recommendations but help you trace day-to-day fluctuations.</p>
+        <form id="journal-form" onsubmit="app.handleJournalSubmit(event)" style="border: 1px solid var(--border-color); padding: 1.5rem; margin-bottom: 2rem;">
+          <div class="dashboard-grid" style="gap: 1rem; margin-bottom: 1rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="journal-mood">Current Mood (1 - 10)</label>
+              <select id="journal-mood" required>
+                <option value="1">1 - Severe Distress / Panic</option>
+                <option value="2">2 - High Anxiety</option>
+                <option value="3">3 - Moderate/High Worry</option>
+                <option value="4">4 - Mild/Moderate Worry</option>
+                <option value="5">5 - Neutral / Grounded</option>
+                <option value="6">6 - Relatively Calm</option>
+                <option value="7">7 - Calm / Productive</option>
+                <option value="8">8 - Good Mood</option>
+                <option value="9">9 - Excellent / Peaceful</option>
+                <option value="10">10 - Highly Resilient / Joyful</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="journal-triggers">Immediate Stress Triggers</label>
+              <input type="text" id="journal-triggers" placeholder="e.g., lack of sleep, loud noises">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="journal-note">Reflections Note</label>
+            <textarea id="journal-note" rows="3" required placeholder="Write a short reflection... how did you manage today?"></textarea>
+          </div>
+          <button type="submit" class="btn btn-secondary btn-small">Save Journal Log</button>
+        </form>
+
+        <!-- Journal Feed -->
+        <h3>Previous Journal Entries</h3>
+        <div id="journal-entries-feed" class="spacious-list" style="margin-top: 1rem;">
+          <!-- Populated by app.js -->
+        </div>
+      </section>
+
+      <!-- 8. RECOMMENDATION HISTORY PAGE -->
+      <section id="view-history" class="view">
+        <h1>Interventions & Recommendations History</h1>
+        <p>A history of all anxiety strategies recommended to you over the course of the study, along with your feedback on their effectiveness.</p>
+
+        <div id="history-list-container" class="spacious-list">
+          <!-- Rendered in app.js -->
+        </div>
+      </section>
+
+      <!-- 9. TRANSPARENT RULE LOGIC PAGE -->
+      <section id="view-rules-logic" class="view">
+        <h1>Explanation of Recommendation Rules</h1>
+        <p>We do not use black-box machine learning algorithms. Every suggestion generated on this platform is determined by deterministic, research-backed logic rules. Below is the complete catalog of rules in plain English.</p>
+
+        <div class="spacious-list" id="rules-plain-english-catalog">
+          <!-- Rendered dynamically from rules.js -->
+        </div>
+
+        <h2 style="margin-top: 3rem;">Interactive Recommendation Simulator</h2>
+        <p>Experiment with inputs below to see exactly how our rule engine maps symptoms to coping recommendations in real-time.</p>
+        
+        <div style="border: 1px solid var(--border-color); padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
+          <div class="form-group">
+            <label for="sim-gad7">Simulated GAD-7 Total Score (0 - 21)</label>
+            <input type="range" id="sim-gad7" min="0" max="21" value="8" oninput="app.runSimulator()">
+            <div class="slider-bounds">
+              <span>0 (Minimal)</span>
+              <span id="sim-gad7-val" style="font-weight: bold; color: var(--accent-sage);">Score: 8</span>
+              <span>21 (Severe)</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="sim-sleep">Simulated Sleep Quality (0 - 10)</label>
+            <input type="range" id="sim-sleep" min="0" max="10" value="5" oninput="app.runSimulator()">
+            <div class="slider-bounds">
+              <span>0 (Poor)</span>
+              <span id="sim-sleep-val" style="font-weight: bold; color: var(--accent-sage);">Quality: 5</span>
+              <span>10 (Excellent)</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="sim-avoidance">Simulated Avoidance Behaviour (0 - 10)</label>
+            <input type="range" id="sim-avoidance" min="0" max="10" value="5" oninput="app.runSimulator()">
+            <div class="slider-bounds">
+              <span>0 (None)</span>
+              <span id="sim-avoidance-val" style="font-weight: bold; color: var(--accent-sage);">Avoidance: 5</span>
+              <span>10 (Severe)</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="sim-previous">Previous GAD-7 History Trend</label>
+            <select id="sim-previous" onchange="app.runSimulator()">
+              <option value="none">No History (First Assessment)</option>
+              <option value="stable">Stable (Previous was same score)</option>
+              <option value="increased">Anxiety Rising (Previous was lower score)</option>
+              <option value="decreased">Anxiety Decreasing (Previous was higher score)</option>
+            </select>
+          </div>
+
+          <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+            <h3>Resulting Recommendations:</h3>
+            <div id="sim-results-output" style="margin-top: 0.5rem;">
+              <!-- Real-time simulator feedback -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. FEEDBACK PAGE -->
+      <section id="view-feedback" class="view">
+        <h1>Research Usability & Trust Survey</h1>
+        <p>To help evaluate this study, please rate your experience with the digital anxiety intervention. Your answers will help researchers optimize clinical transparency.</p>
+
+        <form id="feedback-form" onsubmit="app.handleFeedbackSubmit(event)">
+          
+          <!-- Usability -->
+          <div class="form-group">
+            <label>1. Usability: How easy is it to navigate and use the application?</label>
+            <div class="rating-group" data-rating="usability">
+              <!-- Rendered via app.js -->
+            </div>
+          </div>
+
+          <!-- Clarity -->
+          <div class="form-group">
+            <label>2. Clarity: Are the questions and recommendations easy to understand?</label>
+            <div class="rating-group" data-rating="clarity"></div>
+          </div>
+
+          <!-- Trust -->
+          <div class="form-group">
+            <label>3. Trust: Do you trust the recommendations generated by the system?</label>
+            <div class="rating-group" data-rating="trust"></div>
+          </div>
+
+          <!-- Usefulness -->
+          <div class="form-group">
+            <label>4. Usefulness: How useful are the recommended interventions for your anxiety?</label>
+            <div class="rating-group" data-rating="usefulness"></div>
+          </div>
+
+          <!-- Personalization -->
+          <div class="form-group">
+            <label>5. Personalization: How customized do the recommendations feel to your state?</label>
+            <div class="rating-group" data-rating="personalization"></div>
+          </div>
+
+          <!-- Understanding -->
+          <div class="form-group">
+            <label>6. Rule Logic Clarity: How clearly do you understand *why* recommendations are made?</label>
+            <div class="rating-group" data-rating="ruleUnderstanding"></div>
+          </div>
+
+          <!-- Willingness to continue -->
+          <div class="form-group">
+            <label>7. Willingness to Continue: Would you continue using this tool in your daily routine?</label>
+            <div class="rating-group" data-rating="continueUse"></div>
+          </div>
+
+          <!-- Open text -->
+          <div class="form-group">
+            <label for="feedback-opentext">Open-Text Feedback (Optional)</label>
+            <textarea id="feedback-opentext" rows="4" placeholder="Enter details about your experience, criticisms, or suggestions for clinical rule adjustments..."></textarea>
+          </div>
+
+          <div class="btn-group">
+            <button type="submit" class="btn">Submit Survey</button>
+            <button type="button" class="btn btn-secondary" onclick="app.navigateTo('dashboard')">Back to Dashboard</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- 11. SAFETY SUPPORT PAGE -->
+      <section id="view-safety" class="view">
+        <h1>Clinical Safety & Distress Support</h1>
+        <p>If you are experiencing severe panic, self-harm thoughts, or overwhelming distress, please utilize the professional services below. This application does not substitute for emergency medical care.</p>
+
+        <div class="alert-box danger">
+          <div class="alert-box-title">Immediate Help Resources</div>
+          <p style="margin-bottom: 0.5rem;"><strong>United Kingdom:</strong></p>
+          <ul style="padding-left: 1.2rem; margin-bottom: 1rem;">
+            <li>NHS Mental Health Services: Call <strong>111</strong> (Free, 24/7)</li>
+            <li>Samaritans Crisis Line: Call <strong>116 123</strong> (Free, 24/7)</li>
+            <li>Emergency Services: Call <strong>999</strong> (Life-threatening conditions)</li>
+            <li>GP Contact: Call your local doctor's surgery immediately for urgent triage appointments.</li>
+          </ul>
+
+          <p style="margin-bottom: 0.5rem;"><strong>United States:</strong></p>
+          <ul style="padding-left: 1.2rem; margin-bottom: 0;">
+            <li>National Suicide & Crisis Lifeline: Call or Text <strong>988</strong></li>
+            <li>Crisis Text Line: Text <strong>HOME to 741741</strong></li>
+          </ul>
+        </div>
+
+        <h2>Somatic Grounding Exercise: 5-4-3-2-1 Method</h2>
+        <p>When experiencing a spike in physical anxiety (rapid heart rate, shallow breathing), pause and name the following things in your immediate physical environment:</p>
+        <ol style="padding-left: 1.5rem; margin-bottom: 1.5rem;">
+          <li><strong>5 things you can SEE</strong> (e.g., the texture of your desk, light on the wall, a pen).</li>
+          <li><strong>4 things you can TOUCH</strong> (e.g., the texture of your jeans, your cool desk surface, the fabric of a chair).</li>
+          <li><strong>3 things you can HEAR</strong> (e.g., traffic hum, clock ticking, wind outside).</li>
+          <li><strong>2 things you can SMELL</strong> (e.g., soap on hands, coffee, fresh air).</li>
+          <li><strong>1 thing you can TASTE</strong> (e.g., toothpaste, water, coffee).</li>
+        </ol>
+
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="app.navigateTo('dashboard')">Back to Dashboard</button>
+        </div>
+      </section>
+
+      <!-- 12. CLINICIAN REPORT PAGE -->
+      <section id="view-clinician-report" class="view">
+        <div class="flex-row-space no-print" style="margin-bottom: 2rem;">
+          <h1>Clinician-Friendly Summary</h1>
+          <button class="btn btn-secondary btn-small" onclick="window.print()">Print/Save PDF Report</button>
+        </div>
+
+        <div class="dashboard-section" style="border: 2px solid var(--border-color); padding: 2rem;">
+          <h2 style="margin-top: 0; text-align: center;">Clinical Progress Report</h2>
+          <p style="text-align: center; font-size: 0.85rem; color: var(--text-muted);">Digital Anxiety Intervention Study Summary for Medical Reference</p>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 1rem 0; margin: 1.5rem 0; font-size: 0.9rem;">
+            <div><strong>Participant ID:</strong> <span id="cr-participant-id">--</span></div>
+            <div><strong>Report Created:</strong> <span id="cr-date">--</span></div>
+            <div><strong>Total Assessments logged:</strong> <span id="cr-count">--</span></div>
+            <div><strong>Study Enrollment Date:</strong> <span id="cr-enrollment">--</span></div>
+          </div>
+
+          <h3>Symptom History Summary</h3>
+          <p>This report documents GAD-7 scores and physiological and behavioral tracking markers completed by the participant.</p>
+          
+          <div style="overflow-x: auto; margin-bottom: 1.5rem;">
+            <table class="gad7-table" id="cr-table" style="font-size: 0.85rem;">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>GAD-7 Score</th>
+                  <th>Severity</th>
+                  <th>Sleep (0-10)</th>
+                  <th>Avoidance (0-10)</th>
+                  <th>Daily Chores (0-10)</th>
+                  <th>Coping Confidence (0-10)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Active Coping Plan</h3>
+          <div style="border: 1px solid var(--border-color); padding: 1rem; margin-bottom: 1.5rem; font-size: 0.9rem;">
+            <p><strong>Coping Triggers:</strong> <span id="cr-coping-triggers">None defined</span></p>
+            <p><strong>Coping Strategies:</strong> <span id="cr-coping-strategies">None defined</span></p>
+            <p><strong>Emergency Supports:</strong> <span id="cr-coping-supports">None defined</span></p>
+          </div>
+
+          <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 2rem; font-size: 0.8rem; color: var(--text-muted); text-align: center;">
+            This document is generated by the ANX-INT platform for study compliance evaluation. It is not an automated medical recommendation document.
+          </div>
+        </div>
+      </section>
+
+      <!-- 13. ADMIN DASHBOARD PAGE -->
+      <section id="view-admin" class="view">
+        <div class="flex-row-space" style="margin-bottom: 2rem;">
+          <div>
+            <h1>Study Administration & Researcher Panel</h1>
+            <p>Monitor global anonymized participant metrics, survey compliance, and export data spreadsheets.</p>
+          </div>
+          <div>
+            <button class="btn btn-small" onclick="app.exportAllStudyCSV()">Export All Assessments CSV</button>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="dashboard-section">
+            <span class="dashboard-section-title">Enrolled Participants</span>
+            <div class="stat-large" id="admin-stat-users">0</div>
+          </div>
+          <div class="dashboard-section">
+            <span class="dashboard-section-title">Total Assessments Logged</span>
+            <div class="stat-large" id="admin-stat-assessments">0</div>
+          </div>
+          <div class="dashboard-section">
+            <span class="dashboard-section-title">Feedback Response Rate</span>
+            <div class="stat-large" id="admin-stat-feedback">0%</div>
+          </div>
+        </div>
+
+        <h2>Registered Participant Progress Overview</h2>
+        <div class="admin-table-container">
+          <table class="admin-table" id="admin-participants-table">
+            <thead>
+              <tr>
+                <th>Participant ID</th>
+                <th>Reg. Date</th>
+                <th>Assessments</th>
+                <th>Latest GAD-7</th>
+                <th>Latest Severity</th>
+                <th>Completed Tasks</th>
+                <th>Has Feedback?</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rendered via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Permanent Footer Safety Disclaimer -->
+    <footer>
+      <div class="footer-container">
+        <p class="safety-disclaimer">
+          <strong>Safety Disclaimer:</strong> This tool is for research and self-support only. It does not provide a medical diagnosis and does not replace professional mental health care. If you are experiencing high levels of anxiety, severe distress, or feel at risk, please seek immediate help from your General Practitioner (GP), a qualified psychiatrist, NHS 111, or contact 999.
+        </p>
+        <p>&copy; 2026 Anxiety Intervention Study. All rights reserved.</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Interactive Explanation Popup Modal -->
+  <div id="explanation-modal" class="explanation-modal" onclick="app.closeExplanation()">
+    <div class="explanation-content" onclick="event.stopPropagation()">
+      <button class="explanation-close" onclick="app.closeExplanation()">&times;</button>
+      <h2 style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-top: 0;" id="exp-title">Why am I seeing this?</h2>
+      
+      <div>
+        <h4 style="font-weight: 500; font-size: 1rem; margin-bottom: 0.25rem;">Recommendation context:</h4>
+        <p id="exp-reason" style="color: var(--text-primary); font-size: 0.95rem;">--</p>
+      </div>
+
+      <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <h4 style="font-weight: 500; font-size: 1rem; margin-bottom: 0.25rem;">Transparent rule triggered:</h4>
+        <code id="exp-rule" style="display: block; background-color: var(--bg-secondary); padding: 0.75rem; font-family: monospace; font-size: 0.85rem; border: 1px solid var(--border-color); white-space: pre-wrap; word-break: break-all; color: var(--accent-slate);">--</code>
+      </div>
+
+      <div style="margin-top: 1rem;">
+        <button class="btn btn-secondary btn-small" onclick="app.closeExplanation()">Close Explanation</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="database.js"></script>
+  <script src="rules.js"></script>
+  <script src="data-export.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
