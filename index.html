@@ -1,12 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      alert("Runtime Error:\n" + message + "\nSource: " + source + "\nLine: " + lineno + "\nStack: " + (error ? error.stack : ""));
+      return false;
+    };
+    window.onunhandledrejection = function(event) {
+      alert("Unhandled Promise Rejection:\n" + event.reason + "\nStack: " + (event.reason ? event.reason.stack : ""));
+    };
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Anxiety Intervention Study | Academic Digital Support Tool</title>
-  <meta name="description" content="A transparent, rule-based digital anxiety support tool using GAD-7 and behavioral indicators. Built for clinical and research purposes.">
+  <meta name="description"
+    content="A transparent, rule-based digital anxiety support tool using GAD-7 and behavioral indicators. Built for clinical and research purposes.">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
   <div id="app">
@@ -25,15 +37,19 @@
 
     <!-- Main Content Area -->
     <main>
-      
+
       <!-- 1. LANDING PAGE -->
       <section id="view-landing" class="view active">
         <h1>A transparent, rule-based digital anxiety support tool using GAD-7 and behavioural indicators.</h1>
-        <p>This web application is part of an academic research project evaluating the effectiveness of adaptive, rules-guided self-help interventions. Unlike machine learning algorithms, this platform uses open, explainable rules to provide coping strategies based on your reported anxiety levels and behavioral indicators.</p>
-        
+        <p>This web application is part of an academic research project evaluating the effectiveness of adaptive,
+          rules-guided self-help interventions. Unlike machine learning algorithms, this platform uses open, explainable
+          rules to provide coping strategies based on your reported anxiety levels and behavioral indicators.</p>
+
         <div class="alert-box">
           <div class="alert-box-title">Research Disclaimer</div>
-          <p>This tool is for research and self-support only. It does not provide a medical diagnosis, clinical treatment, or replace professional mental health care. All data collected is strictly anonymized under research code compliance.</p>
+          <p>This tool is for research and self-support only. It does not provide a medical diagnosis, clinical
+            treatment, or replace professional mental health care. All data collected is strictly anonymized under
+            research code compliance.</p>
         </div>
 
         <div class="btn-group">
@@ -45,7 +61,8 @@
       <!-- 2. SIGN-UP / LOGIN PAGE -->
       <section id="view-auth" class="view">
         <h1 id="auth-title">Create Participant Account</h1>
-        <p id="auth-desc">Enter your email and code details below. Your personal identity is kept minimal for privacy compliance.</p>
+        <p id="auth-desc">Enter your email and code details below. Your personal identity is kept minimal for privacy
+          compliance.</p>
 
         <form id="auth-form" onsubmit="app.handleAuthSubmit(event)">
           <div class="form-group">
@@ -56,15 +73,15 @@
             <label for="auth-password">Password</label>
             <input type="password" id="auth-password" required placeholder="Choose a secure password">
           </div>
-          <div class="form-group" id="group-study-code">
-            <label for="auth-study-code">Participant ID</label>
-            <input type="text" id="auth-study-code" required placeholder="e.g., 4059">
-            <p class="slider-desc" style="margin-top: 0.25rem;">Please use a random number as your Participant ID (e.g., 4059).</p>
+          <div class="form-group" id="group-full-name">
+            <label for="auth-full-name">Full Name</label>
+            <input type="text" id="auth-full-name" required placeholder="John Doe">
           </div>
 
           <div class="btn-group">
             <button type="submit" class="btn" id="auth-submit-btn">Register</button>
-            <button type="button" class="btn btn-secondary" id="auth-toggle-btn" onclick="app.toggleAuthMode()">Already registered? Login</button>
+            <button type="button" class="btn btn-secondary" id="auth-toggle-btn" onclick="app.toggleAuthMode()">Already
+              registered? Login</button>
           </div>
         </form>
       </section>
@@ -74,32 +91,42 @@
         <h1>Participant Informed Consent</h1>
         <p>Please review the terms of this study carefully before joining the anxiety intervention research trial.</p>
 
-        <div class="spacious-list" style="border: 1px solid var(--border-color); padding: 1.5rem; background-color: var(--bg-primary); max-height: 350px; overflow-y: auto; margin-bottom: 2rem;">
+        <div class="spacious-list"
+          style="border: 1px solid var(--border-color); padding: 1.5rem; background-color: var(--bg-primary); max-height: 350px; overflow-y: auto; margin-bottom: 2rem;">
           <h3>1. Study Purpose</h3>
-          <p>The goal is to study how transparent, rule-based algorithms adapt recommendations over time based on anxiety scoring and self-reported behaviors.</p>
-          
+          <p>The goal is to study how transparent, rule-based algorithms adapt recommendations over time based on
+            anxiety scoring and self-reported behaviors.</p>
+
           <h3>2. Privacy & Data Integrity</h3>
-          <p>We log GAD-7 inputs, sleep, avoidance, irritability, coping confidence, and intervention completion rates. Email addresses are encrypted client-side. No detailed diagnostic data is shared outside of secure, aggregated spreadsheets.</p>
-          
+          <p>We log GAD-7 inputs, sleep, avoidance, irritability, coping confidence, and intervention completion rates.
+            Email addresses are encrypted client-side. No detailed diagnostic data is shared outside of secure,
+            aggregated spreadsheets.</p>
+
           <h3>3. Clinical Safety Notice</h3>
-          <p>This software is not an emergency psychiatric intervention. If you report severe distress or score high on scale thresholds, you will receive resources for emergency services. The platform cannot replace an emergency triage or clinical evaluation by a medical doctor.</p>
-          
+          <p>This software is not an emergency psychiatric intervention. If you report severe distress or score high on
+            scale thresholds, you will receive resources for emergency services. The platform cannot replace an
+            emergency triage or clinical evaluation by a medical doctor.</p>
+
           <h3>4. Voluntary Participation</h3>
-          <p>You can withdraw at any time. You may also download your complete history in CSV format or request account deletion.</p>
+          <p>You can withdraw at any time. You may also download your complete history in CSV format or request account
+            deletion.</p>
         </div>
 
         <form id="consent-form" onsubmit="app.handleConsentSubmit(event)">
           <div class="consent-item">
             <input type="checkbox" id="consent-check-1" required>
-            <label for="consent-check-1">I voluntary agree to participate in this anxiety intervention research study.</label>
+            <label for="consent-check-1">I voluntary agree to participate in this anxiety intervention research
+              study.</label>
           </div>
           <div class="consent-item">
             <input type="checkbox" id="consent-check-2" required>
-            <label for="consent-check-2">I allow my anonymized weekly assessment, journal counts, and feedback entries to be processed for research analysis.</label>
+            <label for="consent-check-2">I allow my anonymized weekly assessment, journal counts, and feedback entries
+              to be processed for research analysis.</label>
           </div>
           <div class="consent-item">
             <input type="checkbox" id="consent-check-3" required>
-            <label for="consent-check-3">I understand that this tool is not a medical diagnostic service or a replacement for professional clinical care.</label>
+            <label for="consent-check-3">I understand that this tool is not a medical diagnostic service or a
+              replacement for professional clinical care.</label>
           </div>
 
           <div class="btn-group">
@@ -113,28 +140,34 @@
       <section id="view-dashboard" class="view">
         <div class="flex-row-space" style="margin-bottom: 2rem;">
           <div>
-            <h1 style="margin-bottom: 0.25rem;">Participant Dashboard</h1>
-            <p>Welcome back, Participant <span id="dash-participant-id" style="font-weight: 600;">...</span></p>
+            <h1>Participant Dashboard</h1>
+            <p>Welcome back, <span id="dash-participant-name" style="font-weight: 600;">Participant</span> (ID: <span id="dash-participant-id">--</span>)</p>
           </div>
           <div>
             <button class="btn btn-secondary btn-small" onclick="app.exportPersonalCSV()">Export My CSV</button>
           </div>
         </div>
 
-        <!-- Weekly Check-in Banner Reminder -->
-        <div id="checkin-reminder-banner" class="alert-box" style="border-color: var(--accent-sage); background-color: var(--accent-sage-light); display: none;">
-          <div class="alert-box-title" style="color: var(--accent-sage); display: flex; align-items: center; gap: 0.5rem;">
-            <span>●</span> Weekly Assessment is Due
+        <!-- Daily Check-in Banner Reminder -->
+        <div id="checkin-reminder-banner" class="alert-box"
+          style="border-color: var(--accent-sage); background-color: var(--accent-sage-light); display: none;">
+          <div class="alert-box-title"
+            style="color: var(--accent-sage); display: flex; align-items: center; gap: 0.5rem;">
+            <span>●</span> Daily Assessment is Due
           </div>
-          <p>It has been 7 or more days since your last tracking session. Please complete your check-in to update your recommendations.</p>
-          <button class="btn btn-small" onclick="app.navigateTo('assessment')" style="width: fit-content; margin-top: 0.5rem;">Start Weekly Assessment</button>
+          <p>It has been 24 or more hours since your last tracking session. Please complete your check-in to update your
+            recommendations.</p>
+          <button class="btn btn-small" onclick="app.navigateTo('assessment')"
+            style="width: fit-content; margin-top: 0.5rem;">Start Daily Assessment</button>
         </div>
 
         <!-- Clinical Safety Banner for High Scores -->
         <div id="clinical-safety-banner" class="alert-box danger" style="display: none;">
           <div class="alert-box-title">Safety Alert: Elevated Distress Detected</div>
-          <p>Your recent assessment scores reflect severe anxiety levels. This program is for support only. Please seek immediate support from professional services or crisis services.</p>
-          <button class="btn btn-danger btn-small" onclick="app.navigateTo('safety')" style="width: fit-content; margin-top: 0.5rem;">Get Crisis Resources</button>
+          <p>Your recent assessment scores reflect severe anxiety levels. This program is for support only. Please seek
+            immediate support from professional services or crisis services.</p>
+          <button class="btn btn-danger btn-small" onclick="app.navigateTo('safety')"
+            style="width: fit-content; margin-top: 0.5rem;">Get Crisis Resources</button>
         </div>
 
         <!-- Statistics Grid -->
@@ -156,35 +189,89 @@
           </div>
 
           <div class="dashboard-section">
-            <span class="dashboard-section-title">Next Check-In Scheduled</span>
+            <span class="dashboard-section-title">Daily Check-In Lock</span>
             <div id="dash-next-checkin-val" style="font-size: 1.1rem; font-weight: 500;">--</div>
-            <p class="slider-desc" id="dash-next-checkin-desc">Assessments are tracked weekly to update recommendation paths.</p>
+            <p class="slider-desc" id="dash-next-checkin-desc">Assessments are tracked daily to update recommendation paths.</p>
             <button class="btn btn-small" id="dash-log-btn" onclick="app.navigateTo('assessment')">Log Assessment</button>
           </div>
+
+          <div class="dashboard-section">
+            <span class="dashboard-section-title">Active Interventions</span>
+            <div id="dash-active-interventions-summary" class="slider-desc" style="margin: 0;">
+              No active interventions yet. Log your baseline check-in to generate suggestions.
+            </div>
+            <div class="btn-group" style="margin-top: auto;">
+              <button class="btn btn-secondary btn-small" onclick="app.navigateTo('progress')">View Interventions</button>
+            </div>
+          </div>
         </div>
 
-        <!-- Active Recommendations Panel -->
-        <div class="dashboard-section" style="margin-bottom: 2rem;">
-          <div class="flex-row-space" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem;">
-            <span class="dashboard-section-title" style="border: none; margin: 0; padding: 0;">Recommended Interventions</span>
-            <button class="btn btn-secondary btn-small" onclick="app.navigateTo('rules-logic')">How rules work</button>
-          </div>
+        <!-- Progress Check Section -->
+        <h3 style="margin-top: 1.5rem; margin-bottom: 0.75rem; font-weight: 500; font-size: 0.95rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em;">Progress Check</h3>
+        <div class="dashboard-section" style="margin-bottom: 2rem; padding: 2.25rem 1.5rem; background: var(--bg-primary); border-radius: 12px; border: 1px solid var(--border-color); position: relative; overflow: hidden;">
           
-          <p id="no-recs-placeholder" style="display: block;">No active recommendations. Please submit an assessment to generate coping activities.</p>
-          <div id="dashboard-recs-list" class="spacious-list" style="display: none;">
-            <!-- Rendered in app.js -->
+          <!-- The progressive horizontal pathway connecting line -->
+          <div style="position: absolute; top: 3.5rem; left: 15%; right: 15%; height: 3px; background: linear-gradient(90deg, var(--accent-sage) 0%, var(--border-color) 50%, var(--alert-red) 100%); z-index: 1; opacity: 0.4; border-radius: 2px;"></div>
+          
+          <div class="progress-pathway-container" style="display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 2; gap: 1.5rem; flex-wrap: wrap;">
+            
+            <!-- Node 1: Daily -->
+            <div class="pathway-node" style="flex: 1; min-width: 200px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 2.8rem; height: 2.8rem; border-radius: 50%; background: var(--bg-primary); border: 3px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; box-shadow: 0 4px 10px rgba(0,0,0,0.04); transition: all 0.3s;" id="dash-daily-circle">
+                <span style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);" id="dash-trend-daily-val">--</span>
+              </div>
+              <span class="dashboard-section-title" style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.15rem;">Daily Check</span>
+              <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500; margin-bottom: 0.5rem;">vs. yesterday</span>
+              <p class="slider-desc" id="dash-trend-daily-desc" style="margin: 0; font-size: 0.8rem; line-height: 1.4; color: var(--text-secondary); max-width: 200px;">GAD-7 score change vs. yesterday.</p>
+            </div>
+
+            <!-- Node 2: Weekly -->
+            <div class="pathway-node" style="flex: 1; min-width: 200px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 2.8rem; height: 2.8rem; border-radius: 50%; background: var(--bg-primary); border: 3px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; box-shadow: 0 4px 10px rgba(0,0,0,0.04); transition: all 0.3s;" id="dash-weekly-circle">
+                <span style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);" id="dash-trend-weekly-val">--</span>
+              </div>
+              <span class="dashboard-section-title" style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.15rem;">Weekly Check</span>
+              <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500; margin-bottom: 0.5rem;">vs. last week</span>
+              <p class="slider-desc" id="dash-trend-weekly-desc" style="margin: 0; font-size: 0.8rem; line-height: 1.4; color: var(--text-secondary); max-width: 200px;">Weekly average change vs. prior week.</p>
+            </div>
+
+            <!-- Node 3: Monthly -->
+            <div class="pathway-node" style="flex: 1; min-width: 200px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 2.8rem; height: 2.8rem; border-radius: 50%; background: var(--bg-primary); border: 3px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; box-shadow: 0 4px 10px rgba(0,0,0,0.04); transition: all 0.3s;" id="dash-monthly-circle">
+                <span style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);" id="dash-trend-monthly-val">--</span>
+              </div>
+              <span class="dashboard-section-title" style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.15rem;">Monthly Check</span>
+              <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500; margin-bottom: 0.5rem;">vs. last month</span>
+              <p class="slider-desc" id="dash-trend-monthly-desc" style="margin: 0; font-size: 0.8rem; line-height: 1.4; color: var(--text-secondary); max-width: 200px;">Monthly average change vs. prior month.</p>
+            </div>
+
           </div>
         </div>
+
+        <!-- Areas That Need Attention Banner -->
+        <div id="attention-banner" style="display: none; margin-bottom: 2rem;">
+          <div class="attention-banner-header">
+            <span class="attention-banner-icon" aria-hidden="true">⚠</span>
+            <span class="attention-banner-title">Areas That Need Attention</span>
+            <span class="attention-banner-subtitle" id="attention-banner-subtitle"></span>
+          </div>
+          <div id="attention-items-list" class="attention-items-list">
+            <!-- Populated dynamically in app.js -->
+          </div>
+        </div>
+
+
 
         <!-- Coping and History Shortcut Grid -->
-        <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
+        <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); margin-bottom: 2rem;">
           <div class="dashboard-section">
             <span class="dashboard-section-title">Mood Journal & Triggers</span>
             <div id="dash-recent-journal" class="slider-desc" style="margin-bottom: 0.5rem;">
               No recent entries.
             </div>
             <div class="btn-group" style="margin-top: auto;">
-              <button class="btn btn-secondary btn-small" onclick="app.navigateTo('progress')">Log Mood / View Journal</button>
+              <button class="btn btn-secondary btn-small" onclick="app.navigateTo('progress')">Log Mood / View
+                Journal</button>
             </div>
           </div>
 
@@ -196,12 +283,21 @@
             </div>
           </div>
         </div>
+
+        <!-- Assessment Log History Section -->
+        <div class="dashboard-section" style="margin-bottom: 2rem;">
+          <span class="dashboard-section-title">Assessment Log History</span>
+          <div id="dash-log-history-list" class="slider-desc" style="margin: 0; display: flex; flex-direction: column; gap: 0.5rem; width: 100%;">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
       </section>
 
       <!-- 5. WEEKLY ASSESSMENT PAGE -->
       <section id="view-assessment" class="view">
         <h1>Weekly Anxiety Check-In</h1>
-        <p>Over the <strong>last 7 days</strong>, how often have you been bothered by the following problems? Please respond honestly.</p>
+        <p>Over the <strong>last 7 days</strong>, how often have you been bothered by the following problems? Please
+          respond honestly.</p>
 
         <form id="assessment-form" onsubmit="app.handleAssessmentSubmit(event)">
           <!-- GAD-7 Section -->
@@ -283,7 +379,8 @@
             </div>
             <p class="slider-desc">Rate the depth, ease of falling asleep, and restorativeness of your rest.</p>
             <div class="slider-input-wrapper">
-              <input type="range" id="ind-sleep" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('sleep', this.value)">
+              <input type="range" id="ind-sleep" min="0" max="10" step="1" value="5"
+                oninput="app.updateSliderLabel('sleep', this.value)">
             </div>
             <div class="slider-bounds">
               <span>0 (Fragmented/Poor)</span>
@@ -297,9 +394,11 @@
               <span class="slider-label">Avoidance Behaviour</span>
               <span class="slider-value" id="val-avoidance">5</span>
             </div>
-            <p class="slider-desc">To what degree did you actively avoid tasks, places, conversations, or situations that make you anxious?</p>
+            <p class="slider-desc">To what degree did you actively avoid tasks, places, conversations, or situations
+              that make you anxious?</p>
             <div class="slider-input-wrapper">
-              <input type="range" id="ind-avoidance" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('avoidance', this.value)">
+              <input type="range" id="ind-avoidance" min="0" max="10" step="1" value="5"
+                oninput="app.updateSliderLabel('avoidance', this.value)">
             </div>
             <div class="slider-bounds">
               <span>0 (None)</span>
@@ -313,9 +412,11 @@
               <span class="slider-label">Focus & Concentration</span>
               <span class="slider-value" id="val-concentration">5</span>
             </div>
-            <p class="slider-desc">How well could you focus on work, reading, or structured tasks without distraction?</p>
+            <p class="slider-desc">How well could you focus on work, reading, or structured tasks without distraction?
+            </p>
             <div class="slider-input-wrapper">
-              <input type="range" id="ind-concentration" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('concentration', this.value)">
+              <input type="range" id="ind-concentration" min="0" max="10" step="1" value="5"
+                oninput="app.updateSliderLabel('concentration', this.value)">
             </div>
             <div class="slider-bounds">
               <span>0 (Extremely Distracted)</span>
@@ -331,7 +432,8 @@
             </div>
             <p class="slider-desc">How quickly did you experience frustration, annoyance, or low temper thresholds?</p>
             <div class="slider-input-wrapper">
-              <input type="range" id="ind-irritability" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('irritability', this.value)">
+              <input type="range" id="ind-irritability" min="0" max="10" step="1" value="5"
+                oninput="app.updateSliderLabel('irritability', this.value)">
             </div>
             <div class="slider-bounds">
               <span>0 (Composed)</span>
@@ -345,9 +447,11 @@
               <span class="slider-label">Physical Body Tension</span>
               <span class="slider-value" id="val-tension">5</span>
             </div>
-            <p class="slider-desc">Rate bodily stress indicators: muscle tightness, jaw clenching, headaches, or rapid heartbeat.</p>
+            <p class="slider-desc">Rate bodily stress indicators: muscle tightness, jaw clenching, headaches, or rapid
+              heartbeat.</p>
             <div class="slider-input-wrapper">
-              <input type="range" id="ind-tension" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('tension', this.value)">
+              <input type="range" id="ind-tension" min="0" max="10" step="1" value="5"
+                oninput="app.updateSliderLabel('tension', this.value)">
             </div>
             <div class="slider-bounds">
               <span>0 (Relaxed muscles)</span>
@@ -361,9 +465,11 @@
               <span class="slider-label">Social Withdrawal</span>
               <span class="slider-value" id="val-withdrawal">5</span>
             </div>
-            <p class="slider-desc">Did you isolate yourself, skip social calls, or decline community/friend contact because of low mental energy?</p>
+            <p class="slider-desc">Did you isolate yourself, skip social calls, or decline community/friend contact
+              because of low mental energy?</p>
             <div class="slider-input-wrapper">
-              <input type="range" id="ind-withdrawal" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('withdrawal', this.value)">
+              <input type="range" id="ind-withdrawal" min="0" max="10" step="1" value="5"
+                oninput="app.updateSliderLabel('withdrawal', this.value)">
             </div>
             <div class="slider-bounds">
               <span>0 (Fully connected)</span>
@@ -377,9 +483,11 @@
               <span class="slider-label">Daily Functioning & Chores</span>
               <span class="slider-value" id="val-functioning">5</span>
             </div>
-            <p class="slider-desc">How easily could you manage household tasks, physical hygiene, meal prep, and job duties?</p>
+            <p class="slider-desc">How easily could you manage household tasks, physical hygiene, meal prep, and job
+              duties?</p>
             <div class="slider-input-wrapper">
-              <input type="range" id="ind-functioning" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('functioning', this.value)">
+              <input type="range" id="ind-functioning" min="0" max="10" step="1" value="5"
+                oninput="app.updateSliderLabel('functioning', this.value)">
             </div>
             <div class="slider-bounds">
               <span>0 (Inability to act)</span>
@@ -393,9 +501,11 @@
               <span class="slider-label">Coping Confidence</span>
               <span class="slider-value" id="val-confidence">5</span>
             </div>
-            <p class="slider-desc">How confident do you feel in your ability to manage anxious sensations or spikes in stress?</p>
+            <p class="slider-desc">How confident do you feel in your ability to manage anxious sensations or spikes in
+              stress?</p>
             <div class="slider-input-wrapper">
-              <input type="range" id="ind-confidence" min="0" max="10" step="1" value="5" oninput="app.updateSliderLabel('confidence', this.value)">
+              <input type="range" id="ind-confidence" min="0" max="10" step="1" value="5"
+                oninput="app.updateSliderLabel('confidence', this.value)">
             </div>
             <div class="slider-bounds">
               <span>0 (Helpless)</span>
@@ -406,8 +516,10 @@
           <!-- 9. Text Inputs for Triggers -->
           <div class="form-group">
             <label for="ind-triggers">Daily Stress Triggers</label>
-            <input type="text" id="ind-triggers" placeholder="e.g., job deadlines, social event, caffeine intake, poor sleep">
-            <p class="slider-desc">Identify any key events or physiological inputs that triggered spikes in anxiety this week.</p>
+            <input type="text" id="ind-triggers"
+              placeholder="e.g., job deadlines, social event, caffeine intake, poor sleep">
+            <p class="slider-desc">Identify any key events or physiological inputs that triggered spikes in anxiety this
+              week.</p>
           </div>
 
           <!-- 10. Support Seeking -->
@@ -416,7 +528,8 @@
             <select id="ind-support">
               <option value="No">No support sought this week</option>
               <option value="Yes, spoke to family/friend">Yes, spoke to a family member or friend</option>
-              <option value="Yes, spoke to healthcare professional">Yes, spoke to a doctor, counselor, or helpline</option>
+              <option value="Yes, spoke to healthcare professional">Yes, spoke to a doctor, counselor, or helpline
+              </option>
             </select>
             <p class="slider-desc">Did you actively seek external support to process your distress?</p>
           </div>
@@ -432,7 +545,8 @@
       <!-- 6. RESULTS PAGE -->
       <section id="view-results" class="view">
         <h1>Assessment Results</h1>
-        <p>Thank you for submitting your weekly parameters. Your scores have been processed using our transparent clinical logic rules.</p>
+        <p>Thank you for submitting your weekly parameters. Your scores have been processed using our transparent
+          clinical logic rules.</p>
 
         <div class="dashboard-grid" style="margin-bottom: 2rem;">
           <div class="dashboard-section">
@@ -461,8 +575,10 @@
         <!-- Safety box if score >= 15 -->
         <div id="results-safety-box" class="alert-box danger" style="display: none;">
           <div class="alert-box-title">Required Clinical Notice</div>
-          <p>Because your score indicates severe levels of anxiety, we urge you to consult your medical clinician or mental health provider. NHS 111, GP consultation, or local support lines are available.</p>
-          <button class="btn btn-danger btn-small" onclick="app.navigateTo('safety')">Safety Resources & Grounding Tools</button>
+          <p>Because your score indicates severe levels of anxiety, we urge you to consult your medical clinician or
+            mental health provider. NHS 111, GP consultation, or local support lines are available.</p>
+          <button class="btn btn-danger btn-small" onclick="app.navigateTo('safety')">Safety Resources & Grounding
+            Tools</button>
         </div>
 
         <div class="btn-group">
@@ -473,33 +589,97 @@
 
       <!-- 7. PROGRESS PAGE -->
       <section id="view-progress" class="view">
-        <h1>Anxiety & Behavioural Progress</h1>
-        <p>Monitor your symptom patterns over the course of the research study. Consistent entries improve evaluation accuracy.</p>
+        <h1>Anxiety &amp; Behavioural Progress</h1>
+        <p>Monitor your symptom patterns and review your active rule-based interventions. Consistent entries improve evaluation accuracy.</p>
 
         <!-- Trend Graph SVG -->
         <div class="flex-row-space" style="margin-bottom: 0.5rem; justify-content: flex-start; gap: 1.5rem;">
           <h3 style="margin: 0; border: none; padding: 0;">GAD-7 Score History Graph</h3>
           <div style="display: flex; gap: 1rem; align-items: center; font-size: 0.85rem; flex-wrap: wrap;">
-            <label class="consent-item" style="margin: 0; gap: 0.3rem; font-weight: 500; display: inline-flex; align-items: center; cursor: pointer;">
-              <input type="checkbox" id="toggle-overlay-sleep" onchange="app.loadProgress()" style="width: 0.9rem; height: 0.9rem; margin: 0; accent-color: var(--accent-slate);"> 
-              <span style="color: var(--accent-slate); border-bottom: 1px dashed var(--accent-slate);">Overlay Sleep (0-10)</span>
+            <label class="consent-item"
+              style="margin: 0; gap: 0.3rem; font-weight: 500; display: inline-flex; align-items: center; cursor: pointer;">
+              <input type="checkbox" id="toggle-overlay-sleep" onchange="app.loadProgress()"
+                style="width: 0.9rem; height: 0.9rem; margin: 0; accent-color: var(--accent-slate);">
+              <span style="color: var(--accent-slate); border-bottom: 1px dashed var(--accent-slate);">Overlay Sleep
+                (0-10)</span>
             </label>
-            <label class="consent-item" style="margin: 0; gap: 0.3rem; font-weight: 500; display: inline-flex; align-items: center; cursor: pointer;">
-              <input type="checkbox" id="toggle-overlay-avoidance" onchange="app.loadProgress()" style="width: 0.9rem; height: 0.9rem; margin: 0; accent-color: var(--alert-red);"> 
-              <span style="color: var(--alert-red); border-bottom: 1px dashed var(--alert-red);">Overlay Avoidance (0-10)</span>
+            <label class="consent-item"
+              style="margin: 0; gap: 0.3rem; font-weight: 500; display: inline-flex; align-items: center; cursor: pointer;">
+              <input type="checkbox" id="toggle-overlay-avoidance" onchange="app.loadProgress()"
+                style="width: 0.9rem; height: 0.9rem; margin: 0; accent-color: var(--alert-red);">
+              <span style="color: var(--alert-red); border-bottom: 1px dashed var(--alert-red);">Overlay Avoidance
+                (0-10)</span>
             </label>
           </div>
         </div>
-        <div id="progress-graph-wrapper" class="trend-svg-container">
+        <div id="progress-graph-wrapper" class="trend-svg-container" style="margin-bottom: 2.5rem;">
           <!-- Populated by dynamic SVG in app.js -->
+        </div>
+
+        <!-- Recommended Interventions Panel -->
+        <div style="margin-bottom: 2.5rem;">
+          <div class="flex-row-space"
+            style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+            <h3 style="margin: 0; border: none; padding: 0;">Recommended Interventions</h3>
+            <button class="btn btn-secondary btn-small" onclick="app.navigateTo('rules-logic')">How rules work</button>
+          </div>
+          <p id="no-recs-placeholder" style="display: block; margin: 1rem 0; color: var(--text-secondary);">No active recommendations yet. Please complete your baseline check-in to generate personalised, rule-based coping strategies.</p>
+          <button class="btn btn-small" id="prog-baseline-btn" onclick="app.navigateTo('assessment')" style="display: block;">Start Baseline Check-In</button>
+          <div id="progress-recs-list" class="spacious-list" style="display: none;">
+            <!-- Rendered in app.js -->
+          </div>
+        </div>
+
+        <!-- Progress Check Section -->
+        <h3 style="margin-top: 2rem; margin-bottom: 0.75rem; font-weight: 500; font-size: 0.95rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em;">Progress Check</h3>
+        <div class="dashboard-section" style="margin-bottom: 2rem; padding: 2.25rem 1.5rem; background: var(--bg-primary); border-radius: 12px; border: 1px solid var(--border-color); position: relative; overflow: hidden;">
+          
+          <!-- The progressive horizontal pathway connecting line -->
+          <div style="position: absolute; top: 3.5rem; left: 15%; right: 15%; height: 3px; background: linear-gradient(90deg, var(--accent-sage) 0%, var(--border-color) 50%, var(--alert-red) 100%); z-index: 1; opacity: 0.4; border-radius: 2px;"></div>
+          
+          <div class="progress-pathway-container" style="display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 2; gap: 1.5rem; flex-wrap: wrap;">
+            
+            <!-- Node 1: Daily -->
+            <div class="pathway-node" style="flex: 1; min-width: 200px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 2.8rem; height: 2.8rem; border-radius: 50%; background: var(--bg-primary); border: 3px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; box-shadow: 0 4px 10px rgba(0,0,0,0.04); transition: all 0.3s;" id="pathway-daily-circle">
+                <span style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);" id="prog-trend-daily-val">--</span>
+              </div>
+              <span class="dashboard-section-title" style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.15rem;">Daily Check</span>
+              <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500; margin-bottom: 0.5rem;">vs. yesterday</span>
+              <p class="slider-desc" id="prog-trend-daily-desc" style="margin: 0; font-size: 0.8rem; line-height: 1.4; color: var(--text-secondary); max-width: 200px;">GAD-7 score change vs. yesterday.</p>
+            </div>
+
+            <!-- Node 2: Weekly -->
+            <div class="pathway-node" style="flex: 1; min-width: 200px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 2.8rem; height: 2.8rem; border-radius: 50%; background: var(--bg-primary); border: 3px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; box-shadow: 0 4px 10px rgba(0,0,0,0.04); transition: all 0.3s;" id="pathway-weekly-circle">
+                <span style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);" id="prog-trend-weekly-val">--</span>
+              </div>
+              <span class="dashboard-section-title" style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.15rem;">Weekly Check</span>
+              <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500; margin-bottom: 0.5rem;">vs. last week</span>
+              <p class="slider-desc" id="prog-trend-weekly-desc" style="margin: 0; font-size: 0.8rem; line-height: 1.4; color: var(--text-secondary); max-width: 200px;">Weekly average change vs. prior week.</p>
+            </div>
+
+            <!-- Node 3: Monthly -->
+            <div class="pathway-node" style="flex: 1; min-width: 200px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 2.8rem; height: 2.8rem; border-radius: 50%; background: var(--bg-primary); border: 3px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; box-shadow: 0 4px 10px rgba(0,0,0,0.04); transition: all 0.3s;" id="pathway-monthly-circle">
+                <span style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);" id="prog-trend-monthly-val">--</span>
+              </div>
+              <span class="dashboard-section-title" style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.15rem;">Monthly Check</span>
+              <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500; margin-bottom: 0.5rem;">vs. last month</span>
+              <p class="slider-desc" id="prog-trend-monthly-desc" style="margin: 0; font-size: 0.8rem; line-height: 1.4; color: var(--text-secondary); max-width: 200px;">Monthly average change vs. prior month.</p>
+            </div>
+
+          </div>
         </div>
 
         <!-- Sub-trends and completed list -->
         <div class="dashboard-grid" style="margin-top: 2rem;">
           <div class="dashboard-section">
             <span class="dashboard-section-title">Progress Analysis Summary</span>
-            <p id="progress-analysis-txt" style="font-size: 0.95rem;">Please complete more than one assessment to generate trends.</p>
-            <p id="progress-focus-areas" class="slider-value" style="font-size: 0.85rem; text-transform: none; font-weight: normal; color: var(--alert-red);"></p>
+            <p id="progress-analysis-txt" style="font-size: 0.95rem;">Please complete more than one assessment to
+              generate trends.</p>
+            <p id="progress-focus-areas" class="slider-value"
+              style="font-size: 0.85rem; text-transform: none; font-weight: normal; color: var(--alert-red);"></p>
           </div>
 
           <div class="dashboard-section">
@@ -512,27 +692,34 @@
 
         <!-- Personal Coping Plan Editor -->
         <h2>My Personalized Coping Plan</h2>
-        <p>A static coping plan serves as a cognitive anchor when feeling spikes of intense anxiety. Edit and reference yours below.</p>
-        <form id="coping-plan-form" onsubmit="app.handleCopingSubmit(event)" style="border: 1px solid var(--border-color); padding: 1.5rem; margin-bottom: 2rem;">
+        <p>A static coping plan serves as a cognitive anchor when feeling spikes of intense anxiety. Edit and reference
+          yours below.</p>
+        <form id="coping-plan-form" onsubmit="app.handleCopingSubmit(event)"
+          style="border: 1px solid var(--border-color); padding: 1.5rem; margin-bottom: 2rem;">
           <div class="form-group">
             <label for="coping-triggers">Known Triggers (Internal/External)</label>
-            <textarea id="coping-triggers" rows="3" placeholder="e.g., tight work deadlines, dehydration, thinking about upcoming social events"></textarea>
+            <textarea id="coping-triggers" rows="3"
+              placeholder="e.g., tight work deadlines, dehydration, thinking about upcoming social events"></textarea>
           </div>
           <div class="form-group">
             <label for="coping-strategies">Active Coping Strategies (E.g. breathing, walk, reframing)</label>
-            <textarea id="coping-strategies" rows="3" placeholder="e.g., 5 minutes of box breathing, call my support contact, walk around the block"></textarea>
+            <textarea id="coping-strategies" rows="3"
+              placeholder="e.g., 5 minutes of box breathing, call my support contact, walk around the block"></textarea>
           </div>
           <div class="form-group">
             <label for="coping-supports">My Emergency/Support Contacts</label>
-            <textarea id="coping-supports" rows="2" placeholder="e.g., Sarah (Friend): 07700 900077, Dr. Jones (GP): 020 7946 0958"></textarea>
+            <textarea id="coping-supports" rows="2"
+              placeholder="e.g., Sarah (Friend): 07700 900077, Dr. Jones (GP): 020 7946 0958"></textarea>
           </div>
           <button type="submit" class="btn btn-secondary btn-small">Save Coping Plan</button>
         </form>
 
         <!-- Mood & Trigger Journal Form -->
         <h2>Daily Mood & Trigger Journal</h2>
-        <p>Record daily observations, sleep triggers, and micro-reflections. These journal notes do not change your recommendations but help you trace day-to-day fluctuations.</p>
-        <form id="journal-form" onsubmit="app.handleJournalSubmit(event)" style="border: 1px solid var(--border-color); padding: 1.5rem; margin-bottom: 2rem;">
+        <p>Record daily observations, sleep triggers, and micro-reflections. These journal notes do not change your
+          recommendations but help you trace day-to-day fluctuations.</p>
+        <form id="journal-form" onsubmit="app.handleJournalSubmit(event)"
+          style="border: 1px solid var(--border-color); padding: 1.5rem; margin-bottom: 2rem;">
           <div class="dashboard-grid" style="gap: 1rem; margin-bottom: 1rem;">
             <div class="form-group" style="margin-bottom: 0;">
               <label for="journal-mood">Current Mood (1 - 10)</label>
@@ -556,7 +743,8 @@
           </div>
           <div class="form-group">
             <label for="journal-note">Reflections Note</label>
-            <textarea id="journal-note" rows="3" required placeholder="Write a short reflection... how did you manage today?"></textarea>
+            <textarea id="journal-note" rows="3" required
+              placeholder="Write a short reflection... how did you manage today?"></textarea>
           </div>
           <button type="submit" class="btn btn-secondary btn-small">Save Journal Log</button>
         </form>
@@ -571,7 +759,8 @@
       <!-- 8. RECOMMENDATION HISTORY PAGE -->
       <section id="view-history" class="view">
         <h1>Interventions & Recommendations History</h1>
-        <p>A history of all anxiety strategies recommended to you over the course of the study, along with your feedback on their effectiveness.</p>
+        <p>A history of all anxiety strategies recommended to you over the course of the study, along with your feedback
+          on their effectiveness.</p>
 
         <div id="history-list-container" class="spacious-list">
           <!-- Rendered in app.js -->
@@ -581,16 +770,20 @@
       <!-- 9. TRANSPARENT RULE LOGIC PAGE -->
       <section id="view-rules-logic" class="view">
         <h1>Explanation of Recommendation Rules</h1>
-        <p>We do not use black-box machine learning algorithms. Every suggestion generated on this platform is determined by deterministic, research-backed logic rules. Below is the complete catalog of rules in plain English.</p>
+        <p>We do not use black-box machine learning algorithms. Every suggestion generated on this platform is
+          determined by deterministic, research-backed logic rules. Below is the complete catalog of rules in plain
+          English.</p>
 
         <div class="spacious-list" id="rules-plain-english-catalog">
           <!-- Rendered dynamically from rules.js -->
         </div>
 
         <h2 style="margin-top: 3rem;">Interactive Recommendation Simulator</h2>
-        <p>Experiment with inputs below to see exactly how our rule engine maps symptoms to coping recommendations in real-time.</p>
-        
-        <div style="border: 1px solid var(--border-color); padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
+        <p>Experiment with inputs below to see exactly how our rule engine maps symptoms to coping recommendations in
+          real-time.</p>
+
+        <div
+          style="border: 1px solid var(--border-color); padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
           <div class="form-group">
             <label for="sim-gad7">Simulated GAD-7 Total Score (0 - 21)</label>
             <input type="range" id="sim-gad7" min="0" max="21" value="8" oninput="app.runSimulator()">
@@ -643,10 +836,11 @@
       <!-- 10. FEEDBACK PAGE -->
       <section id="view-feedback" class="view">
         <h1>Research Usability & Trust Survey</h1>
-        <p>To help evaluate this study, please rate your experience with the digital anxiety intervention. Your answers will help researchers optimize clinical transparency.</p>
+        <p>To help evaluate this study, please rate your experience with the digital anxiety intervention. Your answers
+          will help researchers optimize clinical transparency.</p>
 
         <form id="feedback-form" onsubmit="app.handleFeedbackSubmit(event)">
-          
+
           <!-- Usability -->
           <div class="form-group">
             <label>1. Usability: How easy is it to navigate and use the application?</label>
@@ -694,12 +888,14 @@
           <!-- Open text -->
           <div class="form-group">
             <label for="feedback-opentext">Open-Text Feedback (Optional)</label>
-            <textarea id="feedback-opentext" rows="4" placeholder="Enter details about your experience, criticisms, or suggestions for clinical rule adjustments..."></textarea>
+            <textarea id="feedback-opentext" rows="4"
+              placeholder="Enter details about your experience, criticisms, or suggestions for clinical rule adjustments..."></textarea>
           </div>
 
           <div class="btn-group">
             <button type="submit" class="btn">Submit Survey</button>
-            <button type="button" class="btn btn-secondary" onclick="app.navigateTo('dashboard')">Back to Dashboard</button>
+            <button type="button" class="btn btn-secondary" onclick="app.navigateTo('dashboard')">Back to
+              Dashboard</button>
           </div>
         </form>
       </section>
@@ -707,7 +903,8 @@
       <!-- 11. SAFETY SUPPORT PAGE -->
       <section id="view-safety" class="view">
         <h1>Clinical Safety & Distress Support</h1>
-        <p>If you are experiencing severe panic, self-harm thoughts, or overwhelming distress, please utilize the professional services below. This application does not substitute for emergency medical care.</p>
+        <p>If you are experiencing severe panic, self-harm thoughts, or overwhelming distress, please utilize the
+          professional services below. This application does not substitute for emergency medical care.</p>
 
         <div class="alert-box danger">
           <div class="alert-box-title">Immediate Help Resources</div>
@@ -727,10 +924,12 @@
         </div>
 
         <h2>Somatic Grounding Exercise: 5-4-3-2-1 Method</h2>
-        <p>When experiencing a spike in physical anxiety (rapid heart rate, shallow breathing), pause and name the following things in your immediate physical environment:</p>
+        <p>When experiencing a spike in physical anxiety (rapid heart rate, shallow breathing), pause and name the
+          following things in your immediate physical environment:</p>
         <ol style="padding-left: 1.5rem; margin-bottom: 1.5rem;">
           <li><strong>5 things you can SEE</strong> (e.g., the texture of your desk, light on the wall, a pen).</li>
-          <li><strong>4 things you can TOUCH</strong> (e.g., the texture of your jeans, your cool desk surface, the fabric of a chair).</li>
+          <li><strong>4 things you can TOUCH</strong> (e.g., the texture of your jeans, your cool desk surface, the
+            fabric of a chair).</li>
           <li><strong>3 things you can HEAR</strong> (e.g., traffic hum, clock ticking, wind outside).</li>
           <li><strong>2 things you can SMELL</strong> (e.g., soap on hands, coffee, fresh air).</li>
           <li><strong>1 thing you can TASTE</strong> (e.g., toothpaste, water, coffee).</li>
@@ -750,9 +949,11 @@
 
         <div class="dashboard-section" style="border: 2px solid var(--border-color); padding: 2rem;">
           <h2 style="margin-top: 0; text-align: center;">Clinical Progress Report</h2>
-          <p style="text-align: center; font-size: 0.85rem; color: var(--text-muted);">Digital Anxiety Intervention Study Summary for Medical Reference</p>
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 1rem 0; margin: 1.5rem 0; font-size: 0.9rem;">
+          <p style="text-align: center; font-size: 0.85rem; color: var(--text-muted);">Digital Anxiety Intervention
+            Study Summary for Medical Reference</p>
+
+          <div
+            style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 1rem 0; margin: 1.5rem 0; font-size: 0.9rem;">
             <div><strong>Participant ID:</strong> <span id="cr-participant-id">--</span></div>
             <div><strong>Report Created:</strong> <span id="cr-date">--</span></div>
             <div><strong>Total Assessments logged:</strong> <span id="cr-count">--</span></div>
@@ -760,8 +961,9 @@
           </div>
 
           <h3>Symptom History Summary</h3>
-          <p>This report documents GAD-7 scores and physiological and behavioral tracking markers completed by the participant.</p>
-          
+          <p>This report documents GAD-7 scores and physiological and behavioral tracking markers completed by the
+            participant.</p>
+
           <div style="overflow-x: auto; margin-bottom: 1.5rem;">
             <table class="gad7-table" id="cr-table" style="font-size: 0.85rem;">
               <thead>
@@ -788,8 +990,10 @@
             <p><strong>Emergency Supports:</strong> <span id="cr-coping-supports">None defined</span></p>
           </div>
 
-          <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 2rem; font-size: 0.8rem; color: var(--text-muted); text-align: center;">
-            This document is generated by the ANX-INT platform for study compliance evaluation. It is not an automated medical recommendation document.
+          <div
+            style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 2rem; font-size: 0.8rem; color: var(--text-muted); text-align: center;">
+            This document is generated by the ANX-INT platform for study compliance evaluation. It is not an automated
+            medical recommendation document.
           </div>
         </div>
       </section>
@@ -848,9 +1052,12 @@
     <footer>
       <div class="footer-container">
         <p class="safety-disclaimer">
-          <strong>Safety Disclaimer:</strong> This tool is for research and self-support only. It does not provide a medical diagnosis and does not replace professional mental health care. If you are experiencing high levels of anxiety, severe distress, or feel at risk, please seek immediate help from your General Practitioner (GP), a qualified psychiatrist, NHS 111, or contact 999.
+          <strong>Safety Disclaimer:</strong> This tool is for research and self-support only. It does not provide a
+          medical diagnosis and does not replace professional mental health care. If you are experiencing high levels of
+          anxiety, severe distress, or feel at risk, please seek immediate help from your General Practitioner (GP), a
+          qualified psychiatrist, NHS 111, or contact 999.
         </p>
-        <p>&copy; 2026 Anxiety Intervention Study. All rights reserved.</p>
+        <p>&copy; 2026 Mary Opeyemi Oyelakin - Anxiety Intervention Study. All rights reserved.</p>
       </div>
     </footer>
   </div>
@@ -859,8 +1066,9 @@
   <div id="explanation-modal" class="explanation-modal" onclick="app.closeExplanation()">
     <div class="explanation-content" onclick="event.stopPropagation()">
       <button class="explanation-close" onclick="app.closeExplanation()">&times;</button>
-      <h2 style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-top: 0;" id="exp-title">Why am I seeing this?</h2>
-      
+      <h2 style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-top: 0;" id="exp-title">
+        Why am I seeing this?</h2>
+
       <div>
         <h4 style="font-weight: 500; font-size: 1rem; margin-bottom: 0.25rem;">Recommendation context:</h4>
         <p id="exp-reason" style="color: var(--text-primary); font-size: 0.95rem;">--</p>
@@ -868,7 +1076,8 @@
 
       <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
         <h4 style="font-weight: 500; font-size: 1rem; margin-bottom: 0.25rem;">Transparent rule triggered:</h4>
-        <code id="exp-rule" style="display: block; background-color: var(--bg-secondary); padding: 0.75rem; font-family: monospace; font-size: 0.85rem; border: 1px solid var(--border-color); white-space: pre-wrap; word-break: break-all; color: var(--accent-slate);">--</code>
+        <code id="exp-rule"
+          style="display: block; background-color: var(--bg-secondary); padding: 0.75rem; font-family: monospace; font-size: 0.85rem; border: 1px solid var(--border-color); white-space: pre-wrap; word-break: break-all; color: var(--accent-slate);">--</code>
       </div>
 
       <div style="margin-top: 1rem;">
@@ -878,9 +1087,11 @@
   </div>
 
   <!-- Scripts -->
-  <script src="database.js"></script>
-  <script src="rules.js"></script>
-  <script src="data-export.js"></script>
-  <script src="app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+  <script src="database.js?v=1.0.7"></script>
+  <script src="rules.js?v=1.0.7"></script>
+  <script src="data-export.js?v=1.0.7"></script>
+  <script src="app.js?v=1.0.7"></script>
 </body>
+
 </html>

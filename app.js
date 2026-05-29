@@ -1,3 +1,18 @@
+// Automatically unregister any conflicting service workers from previous projects on localhost
+if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    if (registrations.length > 0) {
+      for (const registration of registrations) {
+        registration.unregister();
+      }
+      console.log("Cleaned up conflicting localhost service workers.");
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
+    }
+  });
+}
+
 /* 
  * App Controller: Digital Anxiety Intervention Research Project
  * Orchestrates SPA routing, page rendering, event handling, and SVG visualizations.
@@ -18,26 +33,298 @@ class AppController {
     };
   }
 
-  init() {
+  async init() {
     // Check session on load
-    this.checkSession();
+    await this.checkSession();
 
     // Listen to hash routing
     window.addEventListener("hashchange", () => this.handleRouting());
     
     // Initial routing
-    this.handleRouting();
+    await this.handleRouting();
     
     // Setup general listeners
     this.setupListeners();
   }
 
-  checkSession() {
-    this.currentUser = DB.getCurrentUser();
+  async checkSession() {
+    this.currentUser = await DB.getCurrentUser();
     this.updateNavbar();
   }
 
+  calculateTrends(assessments) {
+    if (!assessments || assessments.length === 0) {
+      return {
+        daily: { val: "--", desc: "No assessment logged yet." },
+        weekly: { val: "--", desc: "No assessment logged yet." },
+        monthly: { val: "--", desc: "No assessment logged yet." }
+      };
+    }
+
+    const latest = assessments[assessments.length - 1];
+    
+    // 1. Daily Progress: Compare latest log with previous log
+    let dailyVal = "--";
+    let dailyDesc = "Log assessment tomorrow to calculate daily trend.";
+    
+    if (assessments.length > 1) {
+      const prev = assessments[assessments.length - 2];
+      const timeDiff = latest.timestamp - prev.timestamp;
+      const daysDiff = Math.round(timeDiff / (24 * 60 * 60 * 1000));
+      const diff = latest.score - prev.score;
+      const sign = diff > 0 ? "+" : "";
+      
+      dailyVal = `${sign}${diff}`;
+      if (diff > 0) {
+        dailyDesc = "Anxiety increased compared to your last check-in. Focus on grounding exercises.";
+      } else if (diff < 0) {
+        dailyDesc = "Anxiety decreased compared to your last check-in. Continue with your support routines.";
+      } else {
+        dailyDesc = "Anxiety remained stable compared to your last check-in. Consistency supports stabilization.";
+      }
+    }
+
+    // 2. Weekly Progress: Compare last 7 days average with prior 7 days average (days 8-14)
+    let weeklyVal = "--";
+    let weeklyDesc = "Requires at least 7 days of historical logs.";
+    
+    const refTime = latest.timestamp;
+    const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+    const twoWeeksMs = 14 * 24 * 60 * 60 * 1000;
+    const timeBuffer = 60 * 60 * 1000; // 1 hour buffer for boundary timestamps
+    
+    // Check if the user has data spanning at least 7 days (earliest log is >= 7 days ago relative to latest log)
+    const firstLog = assessments[0];
+    if (refTime - firstLog.timestamp >= oneWeekMs - timeBuffer) {
+      const thisWeekLogs = assessments.filter(a => {
+        const age = refTime - a.timestamp;
+        return age >= 0 && age < oneWeekMs;
+      });
+      const lastWeekLogs = assessments.filter(a => {
+        const age = refTime - a.timestamp;
+        return age >= oneWeekMs && age <= twoWeeksMs + timeBuffer;
+      });
+      
+      if (thisWeekLogs.length > 0 && lastWeekLogs.length > 0) {
+        const thisWeekAvg = thisWeekLogs.reduce((sum, a) => sum + a.score, 0) / thisWeekLogs.length;
+        const lastWeekAvg = lastWeekLogs.reduce((sum, a) => sum + a.score, 0) / lastWeekLogs.length;
+        
+        const diff = thisWeekAvg - lastWeekAvg;
+        const sign = diff > 0 ? "+" : "";
+        weeklyVal = `${sign}${diff.toFixed(1)}`;
+        if (diff > 0) {
+          weeklyDesc = "Weekly average anxiety increased. Consider scheduling structured activity goals.";
+        } else if (diff < 0) {
+          weeklyDesc = "Weekly average anxiety decreased. Your scheduled habits are showing positive results.";
+        } else {
+          weeklyDesc = "Weekly average anxiety is stable. Continue maintaining your current strategies.";
+        }
+      } else {
+        weeklyDesc = "Insufficient daily logs in comparing weeks.";
+      }
+    }
+
+    // 3. Monthly Progress: Compare last 30 days average with prior 30 days average (days 31-60)
+    let monthlyVal = "--";
+    let monthlyDesc = "Requires at least 30 days of historical logs.";
+    
+    const oneMonthMs = 30 * 24 * 60 * 60 * 1000;
+    const twoMonthsMs = 60 * 24 * 60 * 60 * 1000;
+    
+    if (refTime - firstLog.timestamp >= oneMonthMs - timeBuffer) {
+      const thisMonthLogs = assessments.filter(a => {
+        const age = refTime - a.timestamp;
+        return age >= 0 && age < oneMonthMs;
+      });
+      const lastMonthLogs = assessments.filter(a => {
+        const age = refTime - a.timestamp;
+        return age >= oneMonthMs && age <= twoMonthsMs + timeBuffer;
+      });
+      
+      if (thisMonthLogs.length > 0 && lastMonthLogs.length > 0) {
+        const thisMonthAvg = thisMonthLogs.reduce((sum, a) => sum + a.score, 0) / thisMonthLogs.length;
+        const lastMonthAvg = lastMonthLogs.reduce((sum, a) => sum + a.score, 0) / lastMonthLogs.length;
+        
+        const diff = thisMonthAvg - lastMonthAvg;
+        const sign = diff > 0 ? "+" : "";
+        monthlyVal = `${sign}${diff.toFixed(1)}`;
+        if (diff > 0) {
+          monthlyDesc = "Monthly average anxiety increased. Reach out to your supportive contacts or professional help.";
+        } else if (diff < 0) {
+          monthlyDesc = "Monthly average anxiety decreased. Steady progress over the month stabilizes wellbeing.";
+        } else {
+          monthlyDesc = "Monthly average anxiety is stable. Consistent check-ins build long-term emotional balance.";
+        }
+      } else {
+        monthlyDesc = "Insufficient daily logs in comparing months.";
+      }
+    }
+
+    return {
+      daily: { val: dailyVal, desc: dailyDesc },
+      weekly: { val: weeklyVal, desc: weeklyDesc },
+      monthly: { val: monthlyVal, desc: monthlyDesc }
+    };
+  }
+
+  renderTrend(valueId, descId, trendData) {
+    const valEl = document.getElementById(valueId);
+    const descEl = document.getElementById(descId);
+    if (!valEl || !descEl) return;
+
+    valEl.innerText = trendData.val;
+    descEl.innerText = trendData.desc;
+
+    // Reset styles
+    valEl.style.color = "var(--text-primary)";
+
+    // Style dynamically based on value
+    let circleId = "";
+    if (valueId === "prog-trend-daily-val") circleId = "pathway-daily-circle";
+    else if (valueId === "prog-trend-weekly-val") circleId = "pathway-weekly-circle";
+    else if (valueId === "prog-trend-monthly-val") circleId = "pathway-monthly-circle";
+    else if (valueId === "dash-trend-daily-val") circleId = "dash-daily-circle";
+    else if (valueId === "dash-trend-weekly-val") circleId = "dash-weekly-circle";
+    else if (valueId === "dash-trend-monthly-val") circleId = "dash-monthly-circle";
+
+    const circleEl = document.getElementById(circleId);
+    if (circleEl) {
+      circleEl.style.borderColor = "var(--border-color)"; // Reset default
+    }
+
+    if (trendData.val !== "--") {
+      const num = parseFloat(trendData.val);
+      if (num < 0) {
+        valEl.style.color = "var(--accent-sage)"; // Improvement (Anxiety decreased)
+        if (circleEl) circleEl.style.borderColor = "var(--accent-sage)";
+      } else if (num > 0) {
+        valEl.style.color = "var(--alert-red)";   // Regression (Anxiety increased)
+        if (circleEl) circleEl.style.borderColor = "var(--alert-red)";
+      } else {
+        if (circleEl) circleEl.style.borderColor = "var(--accent-slate)";
+      }
+    }
+  }
+
+  getSeverityFromScore(score) {
+    const numericScore = Number(score) || 0;
+    if (numericScore >= 15) return "Severe";
+    if (numericScore >= 10) return "Moderate";
+    if (numericScore >= 5) return "Mild";
+    return "Minimal";
+  }
+
+  renderAttentionBanner(indicators, gad7Score) {
+    const banner = document.getElementById("attention-banner");
+    const itemsList = document.getElementById("attention-items-list");
+    const subtitle = document.getElementById("attention-banner-subtitle");
+    if (!banner || !itemsList) return;
+
+    // Each item: { label, score, scoreMax, advice, isHigh }
+    const attentionItems = [];
+
+    if (indicators.sleep < 4) {
+      attentionItems.push({
+        label: "Poor Sleep Quality",
+        score: `${indicators.sleep}/10`,
+        advice: "Low sleep quality is strongly linked to anxiety amplification. Try a consistent wind-down routine, limit screens before bed, and consider relaxation techniques like progressive muscle relaxation.",
+        isHigh: indicators.sleep <= 2
+      });
+    }
+    if (indicators.avoidance > 6) {
+      attentionItems.push({
+        label: "High Avoidance Behaviors",
+        score: `${indicators.avoidance}/10`,
+        advice: "Avoidance provides short-term relief but strengthens anxiety long-term. Gradual, structured exposure to avoided situations is a core evidence-based strategy. Consider starting with the least feared tasks.",
+        isHigh: indicators.avoidance >= 9
+      });
+    }
+    if (indicators.concentration < 4) {
+      attentionItems.push({
+        label: "Impaired Concentration",
+        score: `${indicators.concentration}/10`,
+        advice: "Difficulty concentrating is a common anxiety symptom. Breaking tasks into smaller steps, scheduled focus blocks, and mindfulness exercises can help rebuild attentional control.",
+        isHigh: indicators.concentration <= 2
+      });
+    }
+    if (indicators.irritability > 6) {
+      attentionItems.push({
+        label: "Elevated Irritability",
+        score: `${indicators.irritability}/10`,
+        advice: "High irritability often signals emotional exhaustion or unmet needs. Regular physical activity, time boundaries, and communication strategies can reduce reactivity.",
+        isHigh: indicators.irritability >= 9
+      });
+    }
+    if (indicators.tension > 6) {
+      attentionItems.push({
+        label: "High Physical Tension",
+        score: `${indicators.tension}/10`,
+        advice: "Muscle tension and physical anxiety symptoms benefit from body-focused practices such as diaphragmatic breathing, stretching, or progressive muscle relaxation exercises.",
+        isHigh: indicators.tension >= 9
+      });
+    }
+    if (indicators.withdrawal > 6) {
+      attentionItems.push({
+        label: "Social Withdrawal",
+        score: `${indicators.withdrawal}/10`,
+        advice: "Withdrawing socially can reinforce feelings of isolation and worry. Small, low-pressure social interactions — even brief ones — help rebuild a sense of connection and normalcy.",
+        isHigh: indicators.withdrawal >= 9
+      });
+    }
+    if (indicators.functioning < 4) {
+      attentionItems.push({
+        label: "Impaired Daily Functioning",
+        score: `${indicators.functioning}/10`,
+        advice: "When anxiety affects your ability to complete daily tasks, prioritizing and simplifying your routine can help. Focus on essentials first and allow yourself recovery time.",
+        isHigh: indicators.functioning <= 2
+      });
+    }
+    if (indicators.confidence < 4) {
+      attentionItems.push({
+        label: "Low Coping Confidence",
+        score: `${indicators.confidence}/10`,
+        advice: "Low confidence in managing anxiety is addressable. Reviewing past successes, using structured coping plans, and incremental challenges can steadily rebuild self-efficacy.",
+        isHigh: indicators.confidence <= 2
+      });
+    }
+    if (gad7Score >= 10) {
+      attentionItems.push({
+        label: "Moderate–Severe GAD-7",
+        score: `${gad7Score}/21`,
+        advice: "Your GAD-7 score is in the moderate-to-severe range. Recommendations in this program are active to support you. Please also consider consulting a mental health professional.",
+        isHigh: gad7Score >= 15
+      });
+    }
+
+    if (attentionItems.length === 0) {
+      banner.style.display = "none";
+      return;
+    }
+
+    // Render card grid
+    itemsList.innerHTML = "";
+    attentionItems.forEach(item => {
+      const el = document.createElement("div");
+      el.className = "attention-item";
+      el.innerHTML = `
+        <div class="attention-item-top">
+          <div class="attention-item-label">${item.label}</div>
+          <span class="attention-item-badge ${item.isHigh ? 'high' : 'moderate'}">${item.score}</span>
+        </div>
+        <div class="attention-item-advice">${item.advice}</div>
+      `;
+      itemsList.appendChild(el);
+    });
+
+    const highCount = attentionItems.filter(i => i.isHigh).length;
+    if (subtitle) {
+      subtitle.innerText = `${attentionItems.length} flagged${highCount > 0 ? ` · ${highCount} critical` : ""}`;
+    }
+    banner.style.display = "block";
+  }
+
   updateNavbar() {
+
     const nav = document.getElementById("main-nav");
     const brand = document.getElementById("nav-brand");
     if (!nav) return;
@@ -65,7 +352,6 @@ class AppController {
       brand.href = "#dashboard";
       nav.innerHTML = `
         <a href="#dashboard">Dashboard</a>
-        <a href="#assessment">Assess</a>
         <a href="#progress">Progress</a>
         <a href="#history">History</a>
         <a href="#rules-logic">Rules</a>
@@ -88,7 +374,7 @@ class AppController {
     });
   }
 
-  handleRouting() {
+  async handleRouting() {
     const hash = window.location.hash.replace("#", "") || "landing";
     
     // Guard routes based on auth status
@@ -116,12 +402,12 @@ class AppController {
           return;
         }
         if (hash === "assessment") {
-          const assessments = DB.getAssessments(this.currentUser.email);
+          const assessments = await DB.getAssessments(this.currentUser.email);
           if (assessments.length > 0) {
             const latest = assessments[assessments.length - 1];
-            const nextCheckinTime = latest.timestamp + (7 * 24 * 60 * 60 * 1000);
+            const nextCheckinTime = latest.timestamp + (24 * 60 * 60 * 1000); // 24 hours lock
             if (Date.now() < nextCheckinTime) {
-              alert(`Your next assessment is scheduled for ${new Date(nextCheckinTime).toLocaleDateString()}. You cannot check in until that date.`);
+              alert(`Your next assessment is scheduled for ${new Date(nextCheckinTime).toLocaleString()}. You cannot check in until that time.`);
               window.location.hash = "#dashboard";
               return;
             }
@@ -131,7 +417,7 @@ class AppController {
     }
 
     this.activeView = hash;
-    this.renderView(hash);
+    await this.renderView(hash);
     this.updateNavbar();
   }
 
@@ -139,11 +425,12 @@ class AppController {
     if (view === "auth" && mode) {
       window.location.hash = `#auth`;
       setTimeout(() => {
-        const toggleBtn = document.getElementById("auth-toggle-btn");
-        if (mode === "login" && toggleBtn.innerText.includes("Login")) {
-          this.toggleAuthMode();
-        } else if (mode === "signup" && toggleBtn.innerText.includes("Register")) {
-          this.toggleAuthMode();
+        const submitBtn = document.getElementById("auth-submit-btn");
+        if (submitBtn) {
+          const currentMode = submitBtn.innerText === "Register" ? "signup" : "login";
+          if (mode !== currentMode) {
+            this.toggleAuthMode();
+          }
         }
       }, 50);
     } else {
@@ -151,8 +438,8 @@ class AppController {
     }
   }
 
-  logout() {
-    DB.logout();
+  async logout() {
+    await DB.logout();
     this.currentUser = null;
     window.location.hash = "#landing";
     this.updateNavbar();
@@ -166,7 +453,7 @@ class AppController {
   }
 
   // Render Page Content
-  renderView(view) {
+  async renderView(view) {
     // Hide all views, display current
     document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
     const activeEl = document.getElementById(`view-${view}`);
@@ -177,28 +464,28 @@ class AppController {
     // Trigger page-specific loaders
     switch (view) {
       case "dashboard":
-        this.loadDashboard();
+        await this.loadDashboard();
         break;
       case "results":
-        this.loadResults();
+        await this.loadResults();
         break;
       case "progress":
-        this.loadProgress();
+        await this.loadProgress();
         break;
       case "history":
-        this.loadHistory();
+        await this.loadHistory();
         break;
       case "rules-logic":
         this.loadRulesLogic();
         break;
       case "feedback":
-        this.loadFeedbackForm();
+        await this.loadFeedbackForm();
         break;
       case "clinician-report":
-        this.loadClinicianReport();
+        await this.loadClinicianReport();
         break;
       case "admin":
-        this.loadAdminDashboard();
+        await this.loadAdminDashboard();
         break;
     }
   }
@@ -210,74 +497,93 @@ class AppController {
     const desc = document.getElementById("auth-desc");
     const submitBtn = document.getElementById("auth-submit-btn");
     const toggleBtn = document.getElementById("auth-toggle-btn");
-    const studyGroup = document.getElementById("group-study-code");
-    const studyInput = document.getElementById("auth-study-code");
+    const nameGroup = document.getElementById("group-full-name");
+    const nameInput = document.getElementById("auth-full-name");
 
     if (submitBtn.innerText === "Register") {
       title.innerText = "Participant Login";
       desc.innerText = "Log in with your email and password to access your dashboard.";
       submitBtn.innerText = "Log In";
       toggleBtn.innerText = "Need an account? Register";
-      studyGroup.style.display = "none";
-      studyInput.removeAttribute("required");
+      if (nameGroup) nameGroup.style.display = "none";
+      if (nameInput) nameInput.removeAttribute("required");
     } else {
       title.innerText = "Create Participant Account";
-      desc.innerText = "Enter your email and code details below. Your personal identity is kept minimal for privacy compliance.";
+      desc.innerText = "Enter your email and name details below. Your personal identity is kept minimal for privacy compliance.";
       submitBtn.innerText = "Register";
       toggleBtn.innerText = "Already registered? Login";
-      studyGroup.style.display = "block";
-      studyInput.setAttribute("required", "required");
+      if (nameGroup) nameGroup.style.display = "block";
+      if (nameInput) nameInput.setAttribute("required", "required");
     }
   }
 
-  handleAuthSubmit(e) {
+  async handleAuthSubmit(e) {
     e.preventDefault();
     const email = document.getElementById("auth-email").value;
     const password = document.getElementById("auth-password").value;
     const isRegister = document.getElementById("auth-submit-btn").innerText === "Register";
 
-    if (isRegister) {
-      const studyCode = document.getElementById("auth-study-code").value;
-      const res = DB.signUp(email, password, studyCode);
-      if (res.success) {
-        this.currentUser = res.user;
-        window.location.hash = this.currentUser.isAdmin ? "#admin" : "#consent";
-      } else {
-        alert(res.message);
-      }
-    } else {
-      const res = DB.login(email, password);
-      if (res.success) {
-        this.currentUser = res.user;
-        if (this.currentUser.isAdmin) {
-          window.location.hash = "#admin";
+    const submitBtn = document.getElementById("auth-submit-btn");
+    const originalText = submitBtn.innerText;
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Processing...";
+
+    try {
+      if (isRegister) {
+        const studyCode = "P-" + Math.floor(100 + Math.random() * 900);
+        const fullName = document.getElementById("auth-full-name").value;
+        const res = await DB.signUp(email, password, studyCode, fullName);
+        if (res.success) {
+          this.currentUser = res.user;
+          window.location.hash = this.currentUser.isAdmin ? "#admin" : "#consent";
         } else {
-          window.location.hash = this.currentUser.isConsentGiven ? "#dashboard" : "#consent";
+          alert(res.message);
         }
       } else {
-        alert(res.message);
+        const res = await DB.login(email, password);
+        if (res.success) {
+          this.currentUser = res.user;
+          if (this.currentUser.isAdmin) {
+            window.location.hash = "#admin";
+          } else {
+            window.location.hash = this.currentUser.isConsentGiven ? "#dashboard" : "#consent";
+          }
+        } else {
+          alert(res.message);
+        }
       }
+    } catch (err) {
+      console.error("Auth error:", err);
+      alert("An error occurred during authentication.");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = originalText;
     }
   }
 
   // 3. Consent View
-  handleConsentSubmit(e) {
+  async handleConsentSubmit(e) {
     e.preventDefault();
     if (this.currentUser) {
-      DB.giveConsent(this.currentUser.email);
+      await DB.giveConsent(this.currentUser.email);
       this.currentUser.isConsentGiven = true;
       window.location.hash = "#dashboard";
     }
   }
 
   // 4. User Dashboard Loader
-  loadDashboard() {
+  async loadDashboard() {
     if (!this.currentUser) return;
     
     document.getElementById("dash-participant-id").innerText = this.currentUser.participantId;
+    const nameEl = document.getElementById("dash-participant-name");
+    if (nameEl) {
+      nameEl.innerText = this.currentUser.fullName || "Participant";
+    }
     
-    const assessments = DB.getAssessments(this.currentUser.email);
-    const completions = DB.getCompletions(this.currentUser.email);
+    const assessments = await DB.getAssessments(this.currentUser.email);
+    const completions = await DB.getCompletions(this.currentUser.email);
+    const coping = await DB.getCopingPlan(this.currentUser.email);
     
     const reminderBanner = document.getElementById("checkin-reminder-banner");
     const safetyBanner = document.getElementById("clinical-safety-banner");
@@ -297,8 +603,22 @@ class AppController {
       reminderBanner.style.display = "block";
       safetyBanner.style.display = "none";
       
-      document.getElementById("no-recs-placeholder").style.display = "block";
-      document.getElementById("dashboard-recs-list").style.display = "none";
+      const emptyTrend = { val: "--", desc: "Please complete your baseline assessment." };
+      this.renderTrend("dash-trend-daily-val", "dash-trend-daily-desc", emptyTrend);
+      this.renderTrend("dash-trend-weekly-val", "dash-trend-weekly-desc", emptyTrend);
+      this.renderTrend("dash-trend-monthly-val", "dash-trend-monthly-desc", emptyTrend);
+
+      const summaryContainer = document.getElementById("dash-active-interventions-summary");
+      if (summaryContainer) {
+        summaryContainer.innerHTML = `<span style="font-style: italic; color: var(--text-secondary);">No active interventions yet. Log your baseline check-in to generate suggestions.</span>`;
+      }
+      const logHistoryList = document.getElementById("dash-log-history-list");
+      if (logHistoryList) {
+        logHistoryList.innerHTML = `<span style="font-style: italic; color: var(--text-secondary);">No log history available yet. Please complete your baseline check-in.</span>`;
+      }
+
+      const attentionBannerEl = document.getElementById("attention-banner");
+      if (attentionBannerEl) attentionBannerEl.style.display = "none";
       return;
     }
 
@@ -313,25 +633,31 @@ class AppController {
     const formattedDate = new Date(latest.timestamp).toLocaleDateString();
     document.getElementById("dash-latest-date").innerText = `Completed on: ${formattedDate}`;
 
-    // Manage Check-in Reminder: 7 days interval check
-    const nextCheckinTime = latest.timestamp + (7 * 24 * 60 * 60 * 1000);
+    // Manage Check-in Reminder: 24 hours lock
+    const nextCheckinTime = latest.timestamp + (24 * 60 * 60 * 1000); // 24 hours lock
     const nextCheckinDate = new Date(nextCheckinTime);
-    const nextCheckinDateString = nextCheckinDate.toLocaleDateString();
+    const nextCheckinDateString = nextCheckinDate.toLocaleString();
     const isOverdue = Date.now() >= nextCheckinTime;
     
     if (isOverdue) {
-      document.getElementById("dash-next-checkin-val").innerText = `${nextCheckinDateString} (Open Now)`;
+      document.getElementById("dash-next-checkin-val").innerText = `Open Now`;
       document.getElementById("dash-next-checkin-val").style.color = "var(--accent-sage)";
-      if (checkinDesc) checkinDesc.innerText = "Your weekly check-in is open. You may log your assessment.";
+      if (checkinDesc) checkinDesc.innerText = "Your daily check-in is open. You may log your assessment.";
       if (logBtn) logBtn.removeAttribute("disabled");
       reminderBanner.style.display = "block";
     } else {
       document.getElementById("dash-next-checkin-val").innerText = nextCheckinDateString;
       document.getElementById("dash-next-checkin-val").style.color = "var(--text-primary)";
-      if (checkinDesc) checkinDesc.innerText = "You cannot log another assessment until the scheduled date.";
+      if (checkinDesc) checkinDesc.innerText = "You cannot log another assessment until the scheduled time.";
       if (logBtn) logBtn.setAttribute("disabled", "disabled");
       reminderBanner.style.display = "none";
     }
+
+    // Render GAD-7 clinical progress trends on dashboard
+    const trends = this.calculateTrends(assessments);
+    this.renderTrend("dash-trend-daily-val", "dash-trend-daily-desc", trends.daily);
+    this.renderTrend("dash-trend-weekly-val", "dash-trend-weekly-desc", trends.weekly);
+    this.renderTrend("dash-trend-monthly-val", "dash-trend-monthly-desc", trends.monthly);
 
     // Manage Safety Banner for severe GAD-7 scores
     if (latest.score >= 15) {
@@ -362,8 +688,11 @@ class AppController {
       });
     }
 
+    // Render Areas That Need Attention banner
+    this.renderAttentionBanner(latest.indicators, latest.score);
+
     // Load coping status message
-    const coping = DB.getCopingPlan(this.currentUser.email);
+
     if (coping.triggers || coping.strategies || coping.supports) {
       document.getElementById("dash-coping-status").innerText = "Your coping plan is active. Take a moment to review it.";
     } else {
@@ -371,7 +700,7 @@ class AppController {
     }
 
     // Load recent journal note
-    const journals = DB.getJournal(this.currentUser.email);
+    const journals = await DB.getJournal(this.currentUser.email);
     const recentJournal = document.getElementById("dash-recent-journal");
     if (journals.length > 0) {
       const recent = journals[0];
@@ -384,79 +713,66 @@ class AppController {
       recentJournal.innerHTML = "No recent entries. Keeping a journal helps map triggers.";
     }
 
-    // Evaluate current rules for user recommendations
+    // Render Active Interventions Summary Card
     const activeRecommendations = RulesEngine.evaluateRules(assessments, completions);
-    const recsList = document.getElementById("dashboard-recs-list");
-    
-    if (activeRecommendations.length === 0) {
-      document.getElementById("no-recs-placeholder").style.display = "block";
-      recsList.style.display = "none";
-    } else {
-      document.getElementById("no-recs-placeholder").style.display = "none";
-      recsList.style.display = "flex";
-      recsList.innerHTML = "";
-      
-      activeRecommendations.forEach(rec => {
-        // Check if completed
-        const isCompleted = completions.some(c => c.recommendationId === rec.id);
-        
-        const recEl = document.createElement("div");
-        recEl.className = `rec-list-item ${isCompleted ? 'completed' : ''}`;
-        
-        // Dynamically inject custom Coping Plan elements (Improvement 3)
-        let dynamicCopingInfo = "";
-        const coping = DB.getCopingPlan(this.currentUser.email);
-        
-        if (rec.id === "additional_coping" && coping.strategies) {
-          dynamicCopingInfo = `
-            <div style="margin: 0.5rem 0; padding: 0.6rem 0.8rem; background-color: var(--accent-sage-light); border: 1px solid var(--border-color); font-size: 0.85rem;">
-              <strong>Your Custom Coping Plan Strategies:</strong>
-              <p style="margin: 0.2rem 0 0 0; font-style: italic; color: var(--text-primary); font-weight: 500;">${coping.strategies}</p>
+    const summaryContainer = document.getElementById("dash-active-interventions-summary");
+    if (summaryContainer) {
+      if (activeRecommendations.length === 0) {
+        summaryContainer.innerHTML = `<span style="font-style: italic; color: var(--text-secondary);">No active interventions yet. Log your baseline check-in to generate suggestions.</span>`;
+      } else {
+        const itemsHtml = activeRecommendations.map(rec => {
+          const isCompleted = completions.some(c => c.recommendationId === rec.id);
+          return `
+            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; padding: 0.2rem 0; border-bottom: 1px dashed var(--border-color); font-weight: 500;">
+              <span style="color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 75%;">${rec.title}</span>
+              <span class="severity-indicator ${isCompleted ? 'mild' : 'moderate'}" style="font-size: 0.7rem; padding: 0.05rem 0.3rem;">
+                ${isCompleted ? '✓ Done' : 'Active'}
+              </span>
             </div>
           `;
-        } else if (rec.id === "crisis_guidance" && coping.supports) {
-          dynamicCopingInfo = `
-            <div style="margin: 0.5rem 0; padding: 0.6rem 0.8rem; background-color: var(--alert-red-light); border: 1px solid var(--alert-red); font-size: 0.85rem;">
-              <strong>Your Stored Emergency Supports:</strong>
-              <p style="margin: 0.2rem 0 0 0; font-style: italic; color: var(--alert-red); font-weight: 500;">${coping.supports}</p>
-            </div>
-          `;
-        }
-        
-        recEl.innerHTML = `
-          <div class="rec-title-row">
-            <div>
-              <span class="severity-indicator" style="margin-bottom: 0.25rem;">${rec.category}</span>
-              <h4>${rec.title}</h4>
-            </div>
-            <div>
-              <input type="checkbox" id="chk-rec-${rec.id}" ${isCompleted ? 'checked' : ''} 
-                style="cursor: pointer; accent-color: var(--accent-sage); width: 1.1rem; height: 1.1rem;"
-                onchange="app.toggleInterventionCompletion('${rec.id}', this.checked)">
-            </div>
-          </div>
-          <p style="margin: 0.25rem 0; font-size: 0.9rem;">${rec.description}</p>
-          ${dynamicCopingInfo}
-          <div class="flex-row-space" style="margin-top: 0.5rem;">
-            <button class="btn btn-secondary btn-small" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"
-              onclick="app.showExplanation('${rec.title}', '${rec.reason}', '${rec.ruleTriggered}')">
-              Why am I seeing this?
-            </button>
-            ${isCompleted ? '<span class="slider-value" style="font-size:0.75rem;">Completed</span>' : ''}
-          </div>
-        `;
-        
-        recsList.appendChild(recEl);
-      });
+        }).join('');
+        summaryContainer.innerHTML = itemsHtml;
+      }
     }
+
+    // Render Log History
+    const logHistoryList = document.getElementById("dash-log-history-list");
+    if (logHistoryList) {
+      if (assessments.length === 0) {
+        logHistoryList.innerHTML = `<span style="font-style: italic; color: var(--text-secondary);">No log history available yet. Please complete your baseline check-in.</span>`;
+      } else {
+        // Render in reverse chronological order
+        const historyHtml = [...assessments].reverse().map(a => {
+          const dateLogged = new Date(a.timestamp).toLocaleDateString(undefined, { dateStyle: 'medium' });
+          const upcomingTime = a.timestamp + (24 * 60 * 60 * 1000);
+          const upcomingDate = new Date(upcomingTime).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+          const severity = a.severity || this.getSeverityFromScore(a.score);
+          const severityClass = severity.toLowerCase();
+          return `
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color); font-size: 0.85rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <span style="font-weight: 600; color: var(--text-primary);">📅 ${dateLogged}</span>
+                <span class="severity-indicator ${severityClass}" style="font-size: 0.75rem; padding: 0.1rem 0.4rem;">
+                  Logged (Score: ${a.score}/21 - ${severity} Anxiety)
+                </span>
+              </div>
+              <div style="color: var(--text-secondary); font-size: 0.8rem;">
+                ⏰ Next Check-In: ${upcomingDate}
+              </div>
+            </div>
+          `;
+        }).join('');
+        logHistoryList.innerHTML = historyHtml;
+      }
+    }
+
   }
 
-  toggleInterventionCompletion(recId, isChecked) {
+  async toggleInterventionCompletion(recId, isChecked) {
     if (!this.currentUser) return;
-    DB.toggleIntervention(this.currentUser.email, recId, isChecked);
-    
-    // Refresh view
-    this.loadDashboard();
+    await DB.toggleIntervention(this.currentUser.email, recId, isChecked);
+    // Refresh the progress view where recs now live
+    await this.loadProgress();
   }
 
   // 5. Weekly Assessment Form Submission
@@ -465,7 +781,7 @@ class AppController {
     if (valEl) valEl.innerText = val;
   }
 
-  handleAssessmentSubmit(e) {
+  async handleAssessmentSubmit(e) {
     e.preventDefault();
     if (!this.currentUser) return;
 
@@ -494,30 +810,44 @@ class AppController {
       support: document.getElementById("ind-support").value
     };
 
-    // Save GAD-7 assessment
-    DB.saveAssessment(this.currentUser.email, gad7Answers, indicators);
+    // Disable submit button / show loader
+    const submitBtn = document.querySelector('#view-assessment button[type="submit"]');
+    const originalText = submitBtn.innerText;
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Saving...";
 
-    // Reset Form sliders back to default
-    document.querySelectorAll('#view-assessment input[type="radio"]').forEach(el => el.checked = false);
-    document.querySelectorAll('#view-assessment input[type="range"]').forEach(input => {
-      input.value = 5;
-    });
-    document.getElementById("ind-triggers").value = "";
-    document.getElementById("ind-support").selectedIndex = 0;
-    
-    // Reset labels
-    ["sleep", "avoidance", "concentration", "irritability", "tension", "withdrawal", "functioning", "confidence"].forEach(lbl => {
-      this.updateSliderLabel(lbl, 5);
-    });
+    try {
+      // Save GAD-7 assessment
+      await DB.saveAssessment(this.currentUser.email, gad7Answers, indicators);
 
-    // Go to Results View
-    window.location.hash = "#results";
+      // Reset Form sliders back to default
+      document.querySelectorAll('#view-assessment input[type="radio"]').forEach(el => el.checked = false);
+      document.querySelectorAll('#view-assessment input[type="range"]').forEach(input => {
+        input.value = 5;
+      });
+      document.getElementById("ind-triggers").value = "";
+      document.getElementById("ind-support").selectedIndex = 0;
+      
+      // Reset labels
+      ["sleep", "avoidance", "concentration", "irritability", "tension", "withdrawal", "functioning", "confidence"].forEach(lbl => {
+        this.updateSliderLabel(lbl, 5);
+      });
+
+      // Go to Results View
+      window.location.hash = "#results";
+    } catch (err) {
+      console.error("Assessment submit error:", err);
+      alert("An error occurred while saving your assessment.");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = originalText;
+    }
   }
 
   // 6. Results View Page Loader
-  loadResults() {
+  async loadResults() {
     if (!this.currentUser) return;
-    const assessments = DB.getAssessments(this.currentUser.email);
+    const assessments = await DB.getAssessments(this.currentUser.email);
     if (assessments.length === 0) {
       window.location.hash = "#dashboard";
       return;
@@ -560,7 +890,7 @@ class AppController {
     }
 
     // Render active adaptive recommendations
-    const completions = DB.getCompletions(this.currentUser.email);
+    const completions = await DB.getCompletions(this.currentUser.email);
     const activeRecommendations = RulesEngine.evaluateRules(assessments, completions);
     const recsContainer = document.getElementById("results-recs-container");
     recsContainer.innerHTML = "";
@@ -604,11 +934,76 @@ class AppController {
   }
 
   // 7. Progress & Coping Plan View Loader
-  loadProgress() {
+  async loadProgress() {
     if (!this.currentUser) return;
 
-    const assessments = DB.getAssessments(this.currentUser.email);
-    
+    const assessments = await DB.getAssessments(this.currentUser.email);
+    const completions = await DB.getCompletions(this.currentUser.email);
+    const coping = await DB.getCopingPlan(this.currentUser.email);
+
+    // --- Recommended Interventions ---
+    const activeRecommendations = RulesEngine.evaluateRules(assessments, completions);
+    const recsList = document.getElementById("progress-recs-list");
+    const noRecsPlaceholder = document.getElementById("no-recs-placeholder");
+    const baselineBtn = document.getElementById("prog-baseline-btn");
+
+    if (activeRecommendations.length === 0) {
+      if (noRecsPlaceholder) noRecsPlaceholder.style.display = "block";
+      if (recsList) recsList.style.display = "none";
+      if (baselineBtn) baselineBtn.style.display = assessments.length === 0 ? "block" : "none";
+    } else {
+      if (noRecsPlaceholder) noRecsPlaceholder.style.display = "none";
+      if (baselineBtn) baselineBtn.style.display = "none";
+      if (recsList) {
+        recsList.style.display = "flex";
+        recsList.innerHTML = "";
+        activeRecommendations.forEach(rec => {
+          const isCompleted = completions.some(c => c.recommendationId === rec.id);
+          const recEl = document.createElement("div");
+          recEl.className = `rec-list-item ${isCompleted ? 'completed' : ''}`;
+
+          let dynamicCopingInfo = "";
+          if (rec.id === "additional_coping" && coping.strategies) {
+            dynamicCopingInfo = `
+              <div style="margin: 0.5rem 0; padding: 0.6rem 0.8rem; background-color: var(--accent-sage-light); border: 1px solid var(--border-color); font-size: 0.85rem;">
+                <strong>Your Custom Coping Plan Strategies:</strong>
+                <p style="margin: 0.2rem 0 0 0; font-style: italic; color: var(--text-primary); font-weight: 500;">${coping.strategies}</p>
+              </div>`;
+          } else if (rec.id === "crisis_guidance" && coping.supports) {
+            dynamicCopingInfo = `
+              <div style="margin: 0.5rem 0; padding: 0.6rem 0.8rem; background-color: var(--alert-red-light); border: 1px solid var(--alert-red); font-size: 0.85rem;">
+                <strong>Your Stored Emergency Supports:</strong>
+                <p style="margin: 0.2rem 0 0 0; font-style: italic; color: var(--alert-red); font-weight: 500;">${coping.supports}</p>
+              </div>`;
+          }
+
+          recEl.innerHTML = `
+            <div class="rec-title-row">
+              <div>
+                <span class="severity-indicator" style="margin-bottom: 0.25rem;">${rec.category}</span>
+                <h4>${rec.title}</h4>
+              </div>
+              <div>
+                <input type="checkbox" id="chk-rec-${rec.id}" ${isCompleted ? 'checked' : ''}
+                  style="cursor: pointer; accent-color: var(--accent-sage); width: 1.1rem; height: 1.1rem;"
+                  onchange="app.toggleInterventionCompletion('${rec.id}', this.checked)">
+              </div>
+            </div>
+            <p style="margin: 0.25rem 0; font-size: 0.9rem;">${rec.description}</p>
+            ${dynamicCopingInfo}
+            <div class="flex-row-space" style="margin-top: 0.5rem;">
+              <button class="btn btn-secondary btn-small" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"
+                onclick="app.showExplanation('${rec.title}', '${rec.reason}', '${rec.ruleTriggered}')">
+                Why am I seeing this?
+              </button>
+              ${isCompleted ? '<span class="slider-value" style="font-size:0.75rem;">Completed</span>' : ''}
+            </div>
+          `;
+          recsList.appendChild(recEl);
+        });
+      }
+    }
+
     // Draw GAD-7 graph
     this.drawProgressGraph(assessments);
 
@@ -616,40 +1011,56 @@ class AppController {
     const analysisText = document.getElementById("progress-analysis-txt");
     const focusAreas = document.getElementById("progress-focus-areas");
     
-    if (assessments.length < 2) {
-      analysisText.innerHTML = "Log at least two weekly assessments to visualize your symptoms progression trends.";
+
+    if (assessments.length === 0) {
+      const emptyTrend = { val: "--", desc: "Please complete your baseline assessment." };
+      this.renderTrend("prog-trend-daily-val", "prog-trend-daily-desc", emptyTrend);
+      this.renderTrend("prog-trend-weekly-val", "prog-trend-weekly-desc", emptyTrend);
+      this.renderTrend("prog-trend-monthly-val", "prog-trend-monthly-desc", emptyTrend);
+      
+      analysisText.innerHTML = "Please complete your baseline check-in to begin progress tracking.";
       focusAreas.innerText = "";
     } else {
-      const latest = assessments[assessments.length - 1];
-      const prev = assessments[assessments.length - 2];
-      const diff = latest.score - prev.score;
-      
-      let trendMsg = "";
-      if (diff < 0) {
-        trendMsg = `Your anxiety GAD-7 total decreased by <strong>${Math.abs(diff)}</strong> points compared to last check-in. This represents positive progress. Keep up your support activities.`;
-      } else if (diff > 0) {
-        trendMsg = `Your anxiety GAD-7 total increased by <strong>${diff}</strong> points. Remember that fluctuations are normal in self-care. Review your coping plan.`;
-      } else {
-        trendMsg = `Your GAD-7 score is stable at <strong>${latest.score}</strong>. Consistency allows steady stabilization of stress factors.`;
-      }
-      analysisText.innerHTML = trendMsg;
+      // Render clinical trends grids on progress page
+      const trends = this.calculateTrends(assessments);
+      this.renderTrend("prog-trend-daily-val", "prog-trend-daily-desc", trends.daily);
+      this.renderTrend("prog-trend-weekly-val", "prog-trend-weekly-desc", trends.weekly);
+      this.renderTrend("prog-trend-monthly-val", "prog-trend-monthly-desc", trends.monthly);
 
-      // Identify focus indicators
-      const badIndicators = [];
-      if (latest.indicators.sleep < 4) badIndicators.push("poor sleep");
-      if (latest.indicators.avoidance > 6) badIndicators.push("high avoidance");
-      if (latest.indicators.tension > 6) badIndicators.push("physical body tension");
-      if (latest.indicators.withdrawal > 6) badIndicators.push("social withdrawal");
-      
-      if (badIndicators.length > 0) {
-        focusAreas.innerText = `Areas needing attention: ${badIndicators.join(", ")}.`;
+      if (assessments.length < 2) {
+        analysisText.innerHTML = "Log daily assessments to visualize your symptoms progression trends.";
+        focusAreas.innerText = "";
       } else {
-        focusAreas.innerText = "All measured physiological parameters remain stable.";
+        const latest = assessments[assessments.length - 1];
+        const prev = assessments[assessments.length - 2];
+        const diff = latest.score - prev.score;
+        
+        let trendMsg = "";
+        if (diff < 0) {
+          trendMsg = `Your anxiety GAD-7 total decreased by <strong>${Math.abs(diff)}</strong> points compared to last check-in. This represents positive progress. Keep up your support activities.`;
+        } else if (diff > 0) {
+          trendMsg = `Your anxiety GAD-7 total increased by <strong>${diff}</strong> points. Remember that fluctuations are normal in self-care. Review your coping plan.`;
+        } else {
+          trendMsg = `Your GAD-7 score is stable at <strong>${latest.score}</strong>. Consistency allows steady stabilization of stress factors.`;
+        }
+        analysisText.innerHTML = trendMsg;
+
+        // Identify focus indicators
+        const badIndicators = [];
+        if (latest.indicators.sleep < 4) badIndicators.push("poor sleep");
+        if (latest.indicators.avoidance > 6) badIndicators.push("high avoidance");
+        if (latest.indicators.tension > 6) badIndicators.push("physical body tension");
+        if (latest.indicators.withdrawal > 6) badIndicators.push("social withdrawal");
+        
+        if (badIndicators.length > 0) {
+          focusAreas.innerText = `Areas needing attention: ${badIndicators.join(", ")}.`;
+        } else {
+          focusAreas.innerText = "All measured physiological parameters remain stable.";
+        }
       }
     }
 
     // Load completed activities list
-    const completions = DB.getCompletions(this.currentUser.email);
     const completionsList = document.getElementById("progress-completions-list");
     completionsList.innerHTML = "";
 
@@ -670,13 +1081,12 @@ class AppController {
     }
 
     // Load Coping plan inputs
-    const coping = DB.getCopingPlan(this.currentUser.email);
     document.getElementById("coping-triggers").value = coping.triggers || "";
     document.getElementById("coping-strategies").value = coping.strategies || "";
     document.getElementById("coping-supports").value = coping.supports || "";
 
     // Load Journal feed
-    this.loadJournalFeed();
+    await this.loadJournalFeed();
   }
 
   // Draw pure SVG chart without any external plotting library
@@ -833,7 +1243,7 @@ class AppController {
     container.innerHTML = svgContent;
   }
 
-  handleCopingSubmit(e) {
+  async handleCopingSubmit(e) {
     e.preventDefault();
     if (!this.currentUser) return;
 
@@ -841,11 +1251,11 @@ class AppController {
     const strategies = document.getElementById("coping-strategies").value;
     const supports = document.getElementById("coping-supports").value;
 
-    DB.saveCopingPlan(this.currentUser.email, triggers, strategies, supports);
+    await DB.saveCopingPlan(this.currentUser.email, triggers, strategies, supports);
     alert("Coping plan saved successfully.");
   }
 
-  handleJournalSubmit(e) {
+  async handleJournalSubmit(e) {
     e.preventDefault();
     if (!this.currentUser) return;
 
@@ -853,7 +1263,7 @@ class AppController {
     const triggers = document.getElementById("journal-triggers").value;
     const note = document.getElementById("journal-note").value;
 
-    DB.saveJournalEntry(this.currentUser.email, mood, triggers, note);
+    await DB.saveJournalEntry(this.currentUser.email, mood, triggers, note);
     
     // Clear note inputs
     document.getElementById("journal-note").value = "";
@@ -861,14 +1271,14 @@ class AppController {
     document.getElementById("journal-mood").selectedIndex = 4; // Reset to mood 5
 
     // Refresh view
-    this.loadProgress();
+    await this.loadProgress();
   }
 
-  loadJournalFeed() {
+  async loadJournalFeed() {
     const journalFeed = document.getElementById("journal-entries-feed");
     if (!journalFeed) return;
 
-    const entries = DB.getJournal(this.currentUser.email);
+    const entries = await DB.getJournal(this.currentUser.email);
     journalFeed.innerHTML = "";
 
     if (entries.length === 0) {
@@ -892,11 +1302,11 @@ class AppController {
   }
 
   // 8. Recommendation History Page Loader
-  loadHistory() {
+  async loadHistory() {
     if (!this.currentUser) return;
 
-    const assessments = DB.getAssessments(this.currentUser.email);
-    const completions = DB.getCompletions(this.currentUser.email);
+    const assessments = await DB.getAssessments(this.currentUser.email);
+    const completions = await DB.getCompletions(this.currentUser.email);
     const container = document.getElementById("history-list-container");
     container.innerHTML = "";
 
@@ -910,6 +1320,7 @@ class AppController {
       const sliceAssessments = assessments.slice(0, idx + 1);
       const targetAssessment = assessments[idx];
       const dateStr = new Date(targetAssessment.timestamp).toLocaleDateString();
+      const targetSeverity = targetAssessment.severity || this.getSeverityFromScore(targetAssessment.score);
 
       // Find recommendations active for that slice
       const sliceCompletions = completions.filter(c => c.timestamp <= targetAssessment.timestamp);
@@ -963,7 +1374,7 @@ class AppController {
 
       section.innerHTML = `
         <h3 style="margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 0.25rem;">
-          Assessment Cycle: ${dateStr} (GAD-7 Total: ${targetAssessment.score} - ${targetAssessment.severity})
+          Assessment Cycle: ${dateStr} (GAD-7 Total: ${targetAssessment.score} - ${targetSeverity})
         </h3>
         ${recsHTML}
       `;
@@ -971,13 +1382,13 @@ class AppController {
     }
   }
 
-  saveRecUsefulnessFeedback(assessmentId, recId, rating) {
+  async saveRecUsefulnessFeedback(assessmentId, recId, rating) {
     if (!this.currentUser) return;
     const compoundId = `${assessmentId}_${recId}`;
     DB.saveRecommendationFeedback(this.currentUser.email, compoundId, rating, "Logged from history page");
     
     // Refresh history entries
-    this.loadHistory();
+    await this.loadHistory();
   }
 
   // 9. Transparent Rule Logic and Simulator
@@ -1079,11 +1490,11 @@ class AppController {
   }
 
   // 10. Research Feedback Form Loader
-  loadFeedbackForm() {
+  async loadFeedbackForm() {
     if (!this.currentUser) return;
 
     // Preset options if already completed
-    const existing = DB.getFeedbackForUser(this.currentUser.email);
+    const existing = await DB.getFeedbackForUser(this.currentUser.email);
 
     const metrics = ["usability", "clarity", "trust", "usefulness", "personalization", "ruleUnderstanding", "continueUse"];
     
@@ -1126,7 +1537,7 @@ class AppController {
     });
   }
 
-  handleFeedbackSubmit(e) {
+  async handleFeedbackSubmit(e) {
     e.preventDefault();
     if (!this.currentUser) return;
 
@@ -1139,17 +1550,17 @@ class AppController {
 
     const openText = document.getElementById("feedback-opentext").value;
     
-    DB.saveFeedback(this.currentUser.email, this.selectedFeedbackRatings, openText);
+    await DB.saveFeedback(this.currentUser.email, this.selectedFeedbackRatings, openText);
     alert("Thank you. Your usability and trust feedback has been saved.");
     window.location.hash = "#dashboard";
   }
 
   // 11. Clinician Report Page Loader
-  loadClinicianReport() {
+  async loadClinicianReport() {
     if (!this.currentUser) return;
 
-    const assessments = DB.getAssessments(this.currentUser.email);
-    const coping = DB.getCopingPlan(this.currentUser.email);
+    const assessments = await DB.getAssessments(this.currentUser.email);
+    const coping = await DB.getCopingPlan(this.currentUser.email);
 
     document.getElementById("cr-participant-id").innerText = this.currentUser.participantId;
     document.getElementById("cr-date").innerText = new Date().toLocaleString();
@@ -1186,18 +1597,19 @@ class AppController {
   }
 
   // 12. Admin Dashboard View Loader
-  loadAdminDashboard() {
+  async loadAdminDashboard() {
     if (!this.currentUser || !this.currentUser.isAdmin) return;
 
-    const adminData = DB.getAdminData();
-    const assessments = localStorage.getItem("adi_assessments") ? JSON.parse(localStorage.getItem("adi_assessments")) : [];
-    const feedback = localStorage.getItem("adi_feedback") ? JSON.parse(localStorage.getItem("adi_feedback")) : [];
+    const adminData = await DB.getAdminData();
+    
+    const totalAssessments = adminData.reduce((sum, p) => sum + (typeof p.assessmentCount === 'number' ? p.assessmentCount : 0), 0);
+    const feedbackCount = adminData.filter(p => p.hasProvidedFeedback).length;
 
     document.getElementById("admin-stat-users").innerText = adminData.length;
-    document.getElementById("admin-stat-assessments").innerText = assessments.length;
+    document.getElementById("admin-stat-assessments").innerText = totalAssessments;
     
     const feedbackRate = adminData.length > 0 
-      ? Math.round((adminData.filter(d => d.hasProvidedFeedback).length / adminData.length) * 100) 
+      ? Math.round((feedbackCount / adminData.length) * 100) 
       : 0;
     document.getElementById("admin-stat-feedback").innerText = `${feedbackRate}%`;
 
@@ -1227,15 +1639,15 @@ class AppController {
   }
 
   // CSV Data Exports
-  exportPersonalCSV() {
+  async exportPersonalCSV() {
     if (!this.currentUser) return;
-    const assessments = DB.getAssessments(this.currentUser.email);
+    const assessments = await DB.getAssessments(this.currentUser.email);
     CSVExporter.exportParticipantHistory(assessments, this.currentUser.participantId);
   }
 
-  exportAllStudyCSV() {
+  async exportAllStudyCSV() {
     if (!this.currentUser || !this.currentUser.isAdmin) return;
-    const rawAssessments = DB.getAllAssessmentsRaw();
+    const rawAssessments = await DB.getAllAssessmentsRaw();
     CSVExporter.exportAllResearcherData(rawAssessments);
   }
 }
