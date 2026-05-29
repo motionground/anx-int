@@ -477,7 +477,19 @@
         <p>Monitor your symptom patterns over the course of the research study. Consistent entries improve evaluation accuracy.</p>
 
         <!-- Trend Graph SVG -->
-        <h3>GAD-7 Score History Graph</h3>
+        <div class="flex-row-space" style="margin-bottom: 0.5rem; justify-content: flex-start; gap: 1.5rem;">
+          <h3 style="margin: 0; border: none; padding: 0;">GAD-7 Score History Graph</h3>
+          <div style="display: flex; gap: 1rem; align-items: center; font-size: 0.85rem; flex-wrap: wrap;">
+            <label class="consent-item" style="margin: 0; gap: 0.3rem; font-weight: 500; display: inline-flex; align-items: center; cursor: pointer;">
+              <input type="checkbox" id="toggle-overlay-sleep" onchange="app.loadProgress()" style="width: 0.9rem; height: 0.9rem; margin: 0; accent-color: var(--accent-slate);"> 
+              <span style="color: var(--accent-slate); border-bottom: 1px dashed var(--accent-slate);">Overlay Sleep (0-10)</span>
+            </label>
+            <label class="consent-item" style="margin: 0; gap: 0.3rem; font-weight: 500; display: inline-flex; align-items: center; cursor: pointer;">
+              <input type="checkbox" id="toggle-overlay-avoidance" onchange="app.loadProgress()" style="width: 0.9rem; height: 0.9rem; margin: 0; accent-color: var(--alert-red);"> 
+              <span style="color: var(--alert-red); border-bottom: 1px dashed var(--alert-red);">Overlay Avoidance (0-10)</span>
+            </label>
+          </div>
+        </div>
         <div id="progress-graph-wrapper" class="trend-svg-container">
           <!-- Populated by dynamic SVG in app.js -->
         </div>

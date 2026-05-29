@@ -403,6 +403,26 @@ class AppController {
         const recEl = document.createElement("div");
         recEl.className = `rec-list-item ${isCompleted ? 'completed' : ''}`;
         
+        // Dynamically inject custom Coping Plan elements (Improvement 3)
+        let dynamicCopingInfo = "";
+        const coping = DB.getCopingPlan(this.currentUser.email);
+        
+        if (rec.id === "additional_coping" && coping.strategies) {
+          dynamicCopingInfo = `
+            <div style="margin: 0.5rem 0; padding: 0.6rem 0.8rem; background-color: var(--accent-sage-light); border: 1px solid var(--border-color); font-size: 0.85rem;">
+              <strong>Your Custom Coping Plan Strategies:</strong>
+              <p style="margin: 0.2rem 0 0 0; font-style: italic; color: var(--text-primary); font-weight: 500;">${coping.strategies}</p>
+            </div>
+          `;
+        } else if (rec.id === "crisis_guidance" && coping.supports) {
+          dynamicCopingInfo = `
+            <div style="margin: 0.5rem 0; padding: 0.6rem 0.8rem; background-color: var(--alert-red-light); border: 1px solid var(--alert-red); font-size: 0.85rem;">
+              <strong>Your Stored Emergency Supports:</strong>
+              <p style="margin: 0.2rem 0 0 0; font-style: italic; color: var(--alert-red); font-weight: 500;">${coping.supports}</p>
+            </div>
+          `;
+        }
+        
         recEl.innerHTML = `
           <div class="rec-title-row">
             <div>
@@ -416,7 +436,8 @@ class AppController {
             </div>
           </div>
           <p style="margin: 0.25rem 0; font-size: 0.9rem;">${rec.description}</p>
-          <div class="flex-row-space" style="margin-top: 0.25rem;">
+          ${dynamicCopingInfo}
+          <div class="flex-row-space" style="margin-top: 0.5rem;">
             <button class="btn btn-secondary btn-small" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"
               onclick="app.showExplanation('${rec.title}', '${rec.reason}', '${rec.ruleTriggered}')">
               Why am I seeing this?
@@ -668,9 +689,12 @@ class AppController {
       return;
     }
 
+    const showSleep = document.getElementById("toggle-overlay-sleep") ? document.getElementById("toggle-overlay-sleep").checked : false;
+    const showAvoidance = document.getElementById("toggle-overlay-avoidance") ? document.getElementById("toggle-overlay-avoidance").checked : false;
+
     const svgWidth = 800;
     const svgHeight = 250;
-    const padding = { top: 30, right: 30, bottom: 45, left: 50 };
+    const padding = { top: 40, right: 30, bottom: 45, left: 50 };
     
     // GAD-7 is always 0 to 21
     const maxScore = 21;
@@ -701,16 +725,73 @@ class AppController {
     const chartWidth = svgWidth - padding.left - padding.right;
     const chartHeight = svgHeight - padding.top - padding.bottom;
     
-    const points = [];
     const stepX = assessments.length > 1 ? chartWidth / (assessments.length - 1) : chartWidth;
 
+    // 1. Calculate GAD-7 points
+    const points = [];
     assessments.forEach((item, index) => {
       const x = padding.left + (assessments.length > 1 ? index * stepX : chartWidth / 2);
       const y = svgHeight - padding.bottom - (item.score / maxScore) * chartHeight;
       points.push({ x, y, item });
     });
 
-    // Draw lines connecting points
+    // 2. Calculate Sleep points (0-10 scale)
+    const sleepPoints = [];
+    if (showSleep) {
+      assessments.forEach((item, index) => {
+        const x = padding.left + (assessments.length > 1 ? index * stepX : chartWidth / 2);
+        const y = svgHeight - padding.bottom - (item.indicators.sleep / 10) * chartHeight;
+        sleepPoints.push({ x, y, val: item.indicators.sleep });
+      });
+    }
+
+    // 3. Calculate Avoidance points (0-10 scale)
+    const avoidancePoints = [];
+    if (showAvoidance) {
+      assessments.forEach((item, index) => {
+        const x = padding.left + (assessments.length > 1 ? index * stepX : chartWidth / 2);
+        const y = svgHeight - padding.bottom - (item.indicators.avoidance / 10) * chartHeight;
+        avoidancePoints.push({ x, y, val: item.indicators.avoidance });
+      });
+    }
+
+    // Draw Sleep line & points
+    if (showSleep && sleepPoints.length > 0) {
+      if (sleepPoints.length > 1) {
+        let pathD = `M ${sleepPoints[0].x} ${sleepPoints[0].y}`;
+        for (let i = 1; i < sleepPoints.length; i++) {
+          pathD += ` L ${sleepPoints[i].x} ${sleepPoints[i].y}`;
+        }
+        svgContent += `<path d="${pathD}" style="fill: none; stroke: var(--accent-slate); stroke-width: 1.5; stroke-dasharray: 4;" />`;
+      }
+      sleepPoints.forEach(pt => {
+        svgContent += `
+          <rect x="${pt.x - 3.5}" y="${pt.y - 3.5}" width="7" height="7" style="fill: var(--accent-slate); cursor: pointer;" 
+            onclick="alert('Sleep Quality: ${pt.val}/10')" />
+          <text x="${pt.x}" y="${pt.y - 8}" class="trend-label" text-anchor="middle" style="fill: var(--accent-slate); font-weight: 500;">S:${pt.val}</text>
+        `;
+      });
+    }
+
+    // Draw Avoidance line & points
+    if (showAvoidance && avoidancePoints.length > 0) {
+      if (avoidancePoints.length > 1) {
+        let pathD = `M ${avoidancePoints[0].x} ${avoidancePoints[0].y}`;
+        for (let i = 1; i < avoidancePoints.length; i++) {
+          pathD += ` L ${avoidancePoints[i].x} ${avoidancePoints[i].y}`;
+        }
+        svgContent += `<path d="${pathD}" style="fill: none; stroke: var(--alert-red); stroke-width: 1.5; stroke-dasharray: 4;" />`;
+      }
+      avoidancePoints.forEach(pt => {
+        svgContent += `
+          <polygon points="${pt.x},${pt.y-4.5} ${pt.x+4.5},${pt.y} ${pt.x},${pt.y+4.5} ${pt.x-4.5},${pt.y}" style="fill: var(--alert-red); cursor: pointer;" 
+            onclick="alert('Avoidance Level: ${pt.val}/10')" />
+          <text x="${pt.x}" y="${pt.y + 12}" class="trend-label" text-anchor="middle" style="fill: var(--alert-red); font-weight: 500;">A:${pt.val}</text>
+        `;
+      });
+    }
+
+    // Draw GAD-7 line & points (drawn last to remain on top)
     if (points.length > 1) {
       let pathD = `M ${points[0].x} ${points[0].y}`;
       for (let i = 1; i < points.length; i++) {
@@ -719,8 +800,7 @@ class AppController {
       svgContent += `<path d="${pathD}" class="trend-line" />`;
     }
 
-    // Draw dots and score values
-    points.forEach((pt, idx) => {
+    points.forEach(pt => {
       const formattedDate = new Date(pt.item.timestamp).toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
       svgContent += `
         <circle cx="${pt.x}" cy="${pt.y}" r="5" class="trend-point" 
@@ -729,6 +809,25 @@ class AppController {
         <text x="${pt.x}" y="${svgHeight - 15}" class="trend-label" text-anchor="middle" transform="rotate(-15, ${pt.x}, ${svgHeight - 15})">${formattedDate}</text>
       `;
     });
+
+    // Draw Legend
+    svgContent += `
+      <g transform="translate(${svgWidth - 365}, 10)" style="font-size: 10px; font-family: var(--font-sans);">
+        <rect width="350" height="20" fill="var(--bg-secondary)" stroke="var(--border-color)" />
+        
+        <line x1="10" y1="10" x2="25" y2="10" style="stroke: var(--accent-sage); stroke-width: 2.5;" />
+        <circle cx="17.5" cy="10" r="3" style="fill: var(--accent-sage);" />
+        <text x="32" y="13" class="trend-label" style="fill: var(--text-primary); font-weight: 500;">GAD-7 Score</text>
+        
+        <line x1="120" y1="10" x2="135" y2="10" style="stroke: var(--accent-slate); stroke-width: 1.5; stroke-dasharray: 2;" />
+        <rect x="124.5" y="7" width="6" height="6" style="fill: var(--accent-slate);" />
+        <text x="142" y="13" class="trend-label" style="fill: var(--text-primary); font-weight: 500;">Sleep (0-10)</text>
+        
+        <line x1="230" y1="10" x2="245" y2="10" style="stroke: var(--alert-red); stroke-width: 1.5; stroke-dasharray: 2;" />
+        <polygon points="237.5,7 240.5,10 237.5,13 234.5,10" style="fill: var(--alert-red);" />
+        <text x="252" y="13" class="trend-label" style="fill: var(--text-primary); font-weight: 500;">Avoidance (0-10)</text>
+      </g>
+    `;
 
     svgContent += `</svg>`;
     container.innerHTML = svgContent;
