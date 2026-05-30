@@ -910,7 +910,7 @@ class AppController {
           <strong>Rule logic:</strong> ${rec.ruleTriggered}
         </div>
         <div style="margin-top: 0.5rem;">
-          <button class="btn btn-secondary btn-small" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"
+          <button class="btn btn-info btn-small" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"
             onclick="app.showExplanation('${rec.title}', '${rec.reason}', '${rec.ruleTriggered}')">
             Why am I seeing this?
           </button>
@@ -983,20 +983,23 @@ class AppController {
                 <span class="severity-indicator" style="margin-bottom: 0.25rem;">${rec.category}</span>
                 <h4>${rec.title}</h4>
               </div>
-              <div>
+              <div class="action-control">
+                <span class="action-status ${isCompleted ? 'completed' : 'pending'}">
+                  ${isCompleted ? 'Completed' : 'To do'}
+                </span>
                 <input type="checkbox" id="chk-rec-${rec.id}" ${isCompleted ? 'checked' : ''}
-                  style="cursor: pointer; accent-color: var(--accent-sage); width: 1.1rem; height: 1.1rem;"
+                  class="action-checkbox"
                   onchange="app.toggleInterventionCompletion('${rec.id}', this.checked)">
               </div>
             </div>
             <p style="margin: 0.25rem 0; font-size: 0.9rem;">${rec.description}</p>
             ${dynamicCopingInfo}
             <div class="flex-row-space" style="margin-top: 0.5rem;">
-              <button class="btn btn-secondary btn-small" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"
+              <button class="btn btn-info btn-small" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"
                 onclick="app.showExplanation('${rec.title}', '${rec.reason}', '${rec.ruleTriggered}')">
                 Why am I seeing this?
               </button>
-              ${isCompleted ? '<span class="slider-value" style="font-size:0.75rem;">Completed</span>' : ''}
+              ${isCompleted ? '<span class="action-status completed">Completed</span>' : '<span class="action-status pending">Try this next</span>'}
             </div>
           `;
           recsList.appendChild(recEl);
@@ -1345,10 +1348,12 @@ class AppController {
         const feedbackEntry = userRatingFeedback.find(rf => rf.recommendationId === `${targetAssessment.id}_${rec.id}`);
         
         recsHTML += `
-          <div style="border-left: 2px solid var(--accent-slate); padding-left: 1rem; margin-top: 0.75rem;">
+          <div class="history-action ${hasCompleted ? 'completed' : 'pending'}">
             <div class="flex-row-space">
               <strong>${rec.title}</strong>
-              <span class="severity-indicator">${hasCompleted ? 'Completed' : 'Not completed'}</span>
+              <span class="action-status ${hasCompleted ? 'completed' : 'pending'}">
+                ${hasCompleted ? 'Completed' : 'Not completed'}
+              </span>
             </div>
             <p style="font-size: 0.85rem; margin: 0.25rem 0;">${rec.description}</p>
             <p class="slider-desc" style="font-size: 0.8rem; margin: 0.1rem 0;">Trigger Rule: <code>${rec.ruleTriggered}</code></p>

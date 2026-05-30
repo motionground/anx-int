@@ -2,7 +2,7 @@
  * Style System: Digital Anxiety Intervention Research Project
  * Minimal, clinical, and human-designed aesthetic.
  * Warm neutrals, slate gray, and sage green accents.
- * No gradients, no shadows, no decorative cards or unnecessary borders.
+ * Soft clinical accents, restrained borders, and low-contrast status colors.
  */
 
 :root {
@@ -11,9 +11,15 @@
   --text-primary: #2d312e;    /* dark charcoal */
   --text-secondary: #606461;  /* slate grey */
   --text-muted: #8c8f8c;       /* light slate */
-  --accent-sage: #5f7464;     /* primary accent (clinical sage green) */
-  --accent-sage-light: #ecefe6;/* very light sage for hover/backgrounds */
-  --accent-slate: #52636a;    /* secondary accent (slate gray) */
+  --accent-sage: #3f654c;     /* primary accent (clinical sage green) */
+  --accent-sage-light: #dce8de;/* light sage for hover/backgrounds */
+  --accent-slate: #415964;    /* secondary accent (slate gray) */
+  --accent-blue: #3f6878;     /* calm informational blue */
+  --accent-blue-light: #dcecf0;
+  --accent-lavender: #5b5570; /* muted emotional wellbeing accent */
+  --accent-lavender-light: #e8e0ec;
+  --accent-amber: #83621f;    /* warm attention accent */
+  --accent-amber-light: #f2e3bd;
   --border-color: #dcdbd3;    /* thin neutral borders */
   --border-hover: #9c9b93;    /* interactive border focus */
   --alert-red: #a24b45;       /* clinical warning / safety red */
@@ -46,7 +52,7 @@ body {
 
 header {
   border-bottom: 1px solid var(--border-color);
-  background-color: var(--bg-primary);
+  background-color: #fcfcfa;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -237,6 +243,7 @@ li {
 .form-group select:focus,
 .form-group textarea:focus {
   border-color: var(--accent-sage);
+  background-color: #ffffff;
 }
 
 /* Buttons */
@@ -258,8 +265,8 @@ li {
 }
 
 .btn:hover {
-  background-color: #4b5d50;
-  border-color: #4b5d50;
+  background-color: #31533c;
+  border-color: #31533c;
 }
 
 .btn:disabled {
@@ -289,6 +296,18 @@ li {
 .btn-danger:hover {
   background-color: var(--alert-red-light);
   color: var(--alert-red);
+}
+
+.btn-info {
+  background-color: var(--accent-blue-light);
+  color: var(--accent-blue);
+  border-color: #9dbdc6;
+}
+
+.btn-info:hover {
+  background-color: #c5dde3;
+  border-color: #82a8b4;
+  color: #2f5666;
 }
 
 .btn-small {
@@ -360,6 +379,7 @@ li {
   padding: 0.75rem 0.5rem;
   color: var(--text-primary);
   font-weight: 500;
+  background-color: var(--accent-blue-light);
 }
 
 .gad7-table td {
@@ -369,7 +389,7 @@ li {
 }
 
 .gad7-table tr:hover td {
-  background-color: var(--bg-secondary);
+  background-color: var(--accent-sage-light);
 }
 
 .radio-cell {
@@ -457,17 +477,26 @@ li {
 
 .dashboard-section {
   border: 1px solid var(--border-color);
+  background-color: #fffefb;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
+.dashboard-section:nth-child(2n) {
+  background-color: #fbfdfb;
+}
+
+.dashboard-section:nth-child(3n) {
+  background-color: #fbfcfd;
+}
+
 .dashboard-section-title {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-muted);
+  color: var(--accent-slate);
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 0.5rem;
   margin-bottom: 0.5rem;
@@ -485,8 +514,27 @@ li {
   padding: 0.2rem 0.5rem;
   font-size: 0.8rem;
   font-weight: 500;
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background-color: var(--accent-blue-light);
+  border: 1px solid #9dbdc6;
+  color: var(--accent-blue);
+}
+
+.severity-indicator.minimal {
+  background-color: var(--accent-blue-light);
+  border-color: #9dbdc6;
+  color: var(--accent-blue);
+}
+
+.severity-indicator.mild {
+  background-color: var(--accent-sage-light);
+  border-color: #a9c4ad;
+  color: var(--accent-sage);
+}
+
+.severity-indicator.moderate {
+  background-color: var(--accent-amber-light);
+  border-color: #d1b45e;
+  color: var(--accent-amber);
 }
 
 .severity-indicator.severe {
@@ -525,36 +573,36 @@ li {
   align-items: center;
   gap: 0.6rem;
   padding: 0.7rem 1rem;
-  background-color: #fdf6ec;
-  border: 1px solid #d9b84e;
+  background-color: var(--accent-amber-light);
+  border: 1px solid #d1b45e;
   border-bottom: none;
 }
 
 .attention-banner-icon {
   font-size: 0.85rem;
-  color: #b07d28;
+  color: var(--accent-amber);
   flex-shrink: 0;
 }
 
 .attention-banner-title {
   font-weight: 600;
   font-size: 0.8rem;
-  color: #7a5200;
+  color: #765e2c;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .attention-banner-subtitle {
   font-size: 0.75rem;
-  color: #9a7230;
+  color: var(--accent-amber);
   font-weight: 400;
   margin-left: auto;
   white-space: nowrap;
 }
 
 .attention-items-list {
-  border: 1px solid #d9b84e;
-  background-color: #fffdf5;
+  border: 1px solid #d1b45e;
+  background-color: #fff9e9;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
@@ -564,13 +612,13 @@ li {
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem 1.1rem;
-  border-right: 1px solid #f0e3b0;
-  border-bottom: 1px solid #f0e3b0;
+  border-right: 1px solid #e5cf8f;
+  border-bottom: 1px solid #e5cf8f;
   transition: background-color 0.15s ease;
 }
 
 .attention-item:hover {
-  background-color: #fdf3d4;
+  background-color: #f6e6b9;
 }
 
 .attention-item-top {
@@ -597,9 +645,9 @@ li {
 }
 
 .attention-item-badge.moderate {
-  background-color: #fef3cc;
-  color: #8a5e00;
-  border: 1px solid #d9b84e;
+  background-color: var(--accent-amber-light);
+  color: var(--accent-amber);
+  border: 1px solid #d1b45e;
 }
 
 .attention-item-badge.high {
@@ -665,7 +713,7 @@ li {
 .trend-svg-container {
   width: 100%;
   border: 1px solid var(--border-color);
-  background-color: var(--bg-primary);
+  background-color: #fcfefc;
   padding: 1rem;
   margin-top: 1rem;
 }
@@ -701,16 +749,26 @@ li {
 /* Recommendation Checklist items */
 .rec-list-item {
   border-left: 2px solid var(--accent-sage);
-  padding-left: 1rem;
+  background-color: #f3f8f4;
+  border-top: 1px solid #cfded2;
+  border-right: 1px solid #cfded2;
+  border-bottom: 1px solid #cfded2;
+  padding: 1rem 1rem 1rem 1.1rem;
   margin-bottom: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
+.rec-list-item:not(.completed) {
+  border-left-color: var(--accent-amber);
+  background-color: #fff8e5;
+}
+
 .rec-list-item.completed {
-  border-left-color: var(--border-color);
-  opacity: 0.7;
+  border-left-color: var(--accent-sage);
+  background-color: #edf5ee;
+  opacity: 0.92;
 }
 
 .rec-title-row {
@@ -730,20 +788,60 @@ li {
   color: var(--text-secondary);
 }
 
+.action-control {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.action-checkbox {
+  cursor: pointer;
+  accent-color: var(--accent-sage);
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.action-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.55rem;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+  line-height: 1.2;
+  border: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.action-status.completed {
+  background-color: var(--accent-sage-light);
+  border-color: #9dbd9f;
+  color: var(--accent-sage);
+}
+
+.action-status.pending {
+  background-color: var(--accent-amber-light);
+  border-color: #d1b45e;
+  color: var(--accent-amber);
+}
+
 .rec-rule {
   font-family: monospace;
-  background-color: var(--bg-secondary);
+  background-color: var(--accent-blue-light);
   padding: 0.3rem 0.5rem;
   font-size: 0.8rem;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
+  color: var(--accent-slate);
+  border: 1px solid #a9c7cf;
   margin-top: 0.5rem;
 }
 
 /* History & Rules List */
 .history-entry {
+  border-left: 2px solid #a9c4ad;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 1.5rem;
+  background-color: #fffefb;
+  padding: 1rem 1rem 1.5rem 1rem;
   margin-bottom: 1.5rem;
 }
 
@@ -753,15 +851,35 @@ li {
   margin-bottom: 0;
 }
 
+.history-action {
+  border-left: 2px solid var(--accent-slate);
+  padding: 0.8rem 0.9rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid #d7e0d3;
+  border-right: 1px solid #d7e0d3;
+  border-bottom: 1px solid #d7e0d3;
+}
+
+.history-action.completed {
+  border-left-color: var(--accent-sage);
+  background-color: #edf5ee;
+}
+
+.history-action.pending {
+  border-left-color: var(--accent-amber);
+  background-color: #fff8e5;
+}
+
 .rule-logic-card {
   border: 1px solid var(--border-color);
+  background-color: #fffefb;
   padding: 1.2rem;
   margin-bottom: 1rem;
 }
 
 .rule-logic-card code {
   display: block;
-  background-color: var(--bg-secondary);
+  background-color: var(--accent-blue-light);
   padding: 0.6rem;
   border-radius: 0;
   margin-top: 0.5rem;
@@ -774,8 +892,11 @@ li {
 
 /* Journal logs style */
 .journal-log-entry {
-  border-left: 2px solid var(--accent-slate);
+  border-left: 2px solid var(--accent-lavender);
+  background-color: var(--accent-lavender-light);
   padding-left: 1rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
   margin-bottom: 1rem;
 }
 
@@ -793,7 +914,7 @@ li {
 }
 
 .admin-table th {
-  background-color: var(--bg-secondary);
+  background-color: var(--accent-blue-light);
   padding: 0.75rem;
   text-align: left;
   border-bottom: 1px solid var(--border-color);
