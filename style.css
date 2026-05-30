@@ -18,8 +18,8 @@
   --accent-blue-light: #dcecf0;
   --accent-lavender: #5b5570; /* muted emotional wellbeing accent */
   --accent-lavender-light: #e8e0ec;
-  --accent-amber: #83621f;    /* warm attention accent */
-  --accent-amber-light: #f2e3bd;
+  --notification-red: #8f3d39; /* notifications, warnings, pending attention */
+  --notification-red-light: #f4dedd;
   --border-color: #dcdbd3;    /* thin neutral borders */
   --border-hover: #9c9b93;    /* interactive border focus */
   --alert-red: #a24b45;       /* clinical warning / safety red */
@@ -532,9 +532,9 @@ li {
 }
 
 .severity-indicator.moderate {
-  background-color: var(--accent-amber-light);
-  border-color: #d1b45e;
-  color: var(--accent-amber);
+  background-color: var(--notification-red-light);
+  border-color: #c77f7b;
+  color: var(--notification-red);
 }
 
 .severity-indicator.severe {
@@ -573,36 +573,36 @@ li {
   align-items: center;
   gap: 0.6rem;
   padding: 0.7rem 1rem;
-  background-color: var(--accent-amber-light);
-  border: 1px solid #d1b45e;
+  background-color: var(--notification-red-light);
+  border: 1px solid #c77f7b;
   border-bottom: none;
 }
 
 .attention-banner-icon {
   font-size: 0.85rem;
-  color: var(--accent-amber);
+  color: var(--notification-red);
   flex-shrink: 0;
 }
 
 .attention-banner-title {
   font-weight: 600;
   font-size: 0.8rem;
-  color: #765e2c;
+  color: var(--notification-red);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .attention-banner-subtitle {
   font-size: 0.75rem;
-  color: var(--accent-amber);
+  color: var(--notification-red);
   font-weight: 400;
   margin-left: auto;
   white-space: nowrap;
 }
 
 .attention-items-list {
-  border: 1px solid #d1b45e;
-  background-color: #fff9e9;
+  border: 1px solid #c77f7b;
+  background-color: #fff5f4;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
@@ -612,13 +612,13 @@ li {
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem 1.1rem;
-  border-right: 1px solid #e5cf8f;
-  border-bottom: 1px solid #e5cf8f;
+  border-right: 1px solid #e3aaa7;
+  border-bottom: 1px solid #e3aaa7;
   transition: background-color 0.15s ease;
 }
 
 .attention-item:hover {
-  background-color: #f6e6b9;
+  background-color: #f7d5d3;
 }
 
 .attention-item-top {
@@ -645,9 +645,9 @@ li {
 }
 
 .attention-item-badge.moderate {
-  background-color: var(--accent-amber-light);
-  color: var(--accent-amber);
-  border: 1px solid #d1b45e;
+  background-color: var(--notification-red-light);
+  color: var(--notification-red);
+  border: 1px solid #c77f7b;
 }
 
 .attention-item-badge.high {
@@ -761,8 +761,8 @@ li {
 }
 
 .rec-list-item:not(.completed) {
-  border-left-color: var(--accent-amber);
-  background-color: #fff8e5;
+  border-left-color: var(--notification-red);
+  background-color: #fff5f4;
 }
 
 .rec-list-item.completed {
@@ -821,9 +821,9 @@ li {
 }
 
 .action-status.pending {
-  background-color: var(--accent-amber-light);
-  border-color: #d1b45e;
-  color: var(--accent-amber);
+  background-color: var(--notification-red-light);
+  border-color: #c77f7b;
+  color: var(--notification-red);
 }
 
 .rec-rule {
@@ -866,8 +866,8 @@ li {
 }
 
 .history-action.pending {
-  border-left-color: var(--accent-amber);
-  background-color: #fff8e5;
+  border-left-color: var(--notification-red);
+  background-color: #fff5f4;
 }
 
 .rule-logic-card {

@@ -641,7 +641,7 @@ class AppController {
     
     if (isOverdue) {
       document.getElementById("dash-next-checkin-val").innerText = `Open Now`;
-      document.getElementById("dash-next-checkin-val").style.color = "var(--accent-sage)";
+      document.getElementById("dash-next-checkin-val").style.color = "var(--notification-red)";
       if (checkinDesc) checkinDesc.innerText = "Your daily check-in is open. You may log your assessment.";
       if (logBtn) logBtn.removeAttribute("disabled");
       reminderBanner.style.display = "block";

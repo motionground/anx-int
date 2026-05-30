@@ -150,14 +150,14 @@
 
         <!-- Daily Check-in Banner Reminder -->
         <div id="checkin-reminder-banner" class="alert-box"
-          style="border-color: var(--accent-sage); background-color: var(--accent-sage-light); display: none;">
+          style="border-color: var(--notification-red); background-color: var(--notification-red-light); display: none;">
           <div class="alert-box-title"
-            style="color: var(--accent-sage); display: flex; align-items: center; gap: 0.5rem;">
+            style="color: var(--notification-red); display: flex; align-items: center; gap: 0.5rem;">
             <span>●</span> Daily Assessment is Due
           </div>
           <p>It has been 24 or more hours since your last tracking session. Please complete your check-in to update your
             recommendations.</p>
-          <button class="btn btn-small" onclick="app.navigateTo('assessment')"
+          <button class="btn btn-danger btn-small" onclick="app.navigateTo('assessment')"
             style="width: fit-content; margin-top: 0.5rem;">Start Daily Assessment</button>
         </div>
 
@@ -211,7 +211,7 @@
         <div class="dashboard-section" style="margin-bottom: 2rem; padding: 2.25rem 1.5rem; background: var(--bg-primary); border-radius: 12px; border: 1px solid var(--border-color); position: relative; overflow: hidden;">
           
           <!-- The progressive horizontal pathway connecting line -->
-          <div style="position: absolute; top: 3.5rem; left: 15%; right: 15%; height: 3px; background: linear-gradient(90deg, var(--accent-sage) 0%, var(--border-color) 50%, var(--alert-red) 100%); z-index: 1; opacity: 0.4; border-radius: 2px;"></div>
+          <div style="position: absolute; top: 3.5rem; left: 15%; right: 15%; height: 3px; background: linear-gradient(90deg, var(--accent-sage) 0%, var(--accent-sage-light) 50%, var(--accent-sage) 100%); z-index: 1; opacity: 0.55; border-radius: 2px;"></div>
           
           <div class="progress-pathway-container" style="display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 2; gap: 1.5rem; flex-wrap: wrap;">
             
@@ -635,7 +635,7 @@
         <div class="dashboard-section" style="margin-bottom: 2rem; padding: 2.25rem 1.5rem; background: var(--bg-primary); border-radius: 12px; border: 1px solid var(--border-color); position: relative; overflow: hidden;">
           
           <!-- The progressive horizontal pathway connecting line -->
-          <div style="position: absolute; top: 3.5rem; left: 15%; right: 15%; height: 3px; background: linear-gradient(90deg, var(--accent-sage) 0%, var(--border-color) 50%, var(--alert-red) 100%); z-index: 1; opacity: 0.4; border-radius: 2px;"></div>
+          <div style="position: absolute; top: 3.5rem; left: 15%; right: 15%; height: 3px; background: linear-gradient(90deg, var(--accent-sage) 0%, var(--accent-sage-light) 50%, var(--accent-sage) 100%); z-index: 1; opacity: 0.55; border-radius: 2px;"></div>
           
           <div class="progress-pathway-container" style="display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 2; gap: 1.5rem; flex-wrap: wrap;">
             
