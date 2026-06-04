@@ -16,7 +16,8 @@
   <title>Anxiety Intervention Study | Academic Digital Support Tool</title>
   <meta name="description"
     content="A transparent, rule-based digital anxiety support tool using GAD-7 and behavioral indicators. Built for clinical and research purposes.">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/admin.css">
 </head>
 
 <body>
@@ -1000,49 +1001,237 @@
 
       <!-- 13. ADMIN DASHBOARD PAGE -->
       <section id="view-admin" class="view">
-        <div class="flex-row-space" style="margin-bottom: 2rem;">
-          <div>
-            <h1>Study Administration & Researcher Panel</h1>
-            <p>Monitor global anonymized participant metrics, survey compliance, and export data spreadsheets.</p>
+        <div id="admin-main-view">
+          <div class="flex-row-space" style="margin-bottom: 2rem;">
+            <div>
+              <h1>Study Administration & Researcher Panel</h1>
+              <p>Monitor global anonymized participant metrics, survey compliance, and export data spreadsheets.</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <button class="btn btn-small btn-secondary" onclick="document.getElementById('import-csv-input').click()">Import Dataset (CSV)</button>
+              <input type="file" id="import-csv-input" accept=".csv" style="display: none;" onchange="app.importDatasetCSV(event)">
+              <button class="btn btn-small" onclick="app.exportAllStudyCSV()">Export All Assessments CSV</button>
+            </div>
           </div>
-          <div>
-            <button class="btn btn-small" onclick="app.exportAllStudyCSV()">Export All Assessments CSV</button>
+
+          <div class="dashboard-grid">
+            <div class="dashboard-section">
+              <span class="dashboard-section-title">Enrolled Participants</span>
+              <div class="stat-large" id="admin-stat-users">0</div>
+            </div>
+            <div class="dashboard-section">
+              <span class="dashboard-section-title">Total Assessments Logged</span>
+              <div class="stat-large" id="admin-stat-assessments">0</div>
+            </div>
+            <div class="dashboard-section">
+              <span class="dashboard-section-title">Feedback Response Rate</span>
+              <div class="stat-large" id="admin-stat-feedback">0%</div>
+            </div>
+          </div>
+
+          <!-- Cohort Statistical Analysis Suite -->
+          <h2 style="margin-top: 2.5rem;">Cohort Statistical Analysis Suite</h2>
+          <p class="slider-desc" style="margin-bottom: 0.75rem;">Advanced clinical research analytics aggregated across all participants. Click <strong>Run Analysis</strong> on each module to compute results from the full dataset.</p>
+          <button class="btn stat-run-all-btn" id="stat-run-all-btn" onclick="app.runAllStatisticalAnalyses()">
+            ▶ Run All Analyses
+          </button>
+
+          <!-- Participant Selector for Analysis Scope -->
+          <div class="stat-participant-selector" id="stat-participant-selector">
+            <div class="stat-selector-header">
+              <div class="stat-selector-title-row">
+                <span class="stat-selector-icon">👥</span>
+                <h3 class="stat-selector-title">Analysis Scope — Select Participants</h3>
+              </div>
+              <p class="stat-selector-desc">Choose which participants to include in the analyses below. Select one, multiple, or all.</p>
+            </div>
+            <div class="stat-selector-controls">
+              <button class="btn btn-small btn-secondary" id="stat-select-all-btn" onclick="AdminController.selectAllParticipants()">Select All</button>
+              <button class="btn btn-small btn-secondary" id="stat-deselect-all-btn" onclick="AdminController.deselectAllParticipants()">Deselect All</button>
+              <span class="stat-selector-count" id="stat-selector-count">0 of 0 selected</span>
+            </div>
+            <div class="stat-selector-grid" id="stat-selector-grid">
+              <!-- Populated dynamically by admin.js -->
+              <div class="stat-placeholder" style="grid-column:1/-1;">Loading participants…</div>
+            </div>
+          </div>
+
+          <!-- Module 1: Multiple Linear Regression -->
+          <div class="stat-module" id="stat-module-regression">
+            <div class="stat-module-header">
+              <div>
+                <div class="stat-module-tag">Module 1</div>
+                <h3 class="stat-module-title">Multiple Linear Regression</h3>
+                <p class="stat-module-desc">Predicting GAD-7 anxiety scores from sleep quality, avoidance behaviour, and physical tension across all check-ins.</p>
+              </div>
+              <button class="btn stat-run-btn" onclick="app.runRegressionAnalysis()" id="btn-run-regression">Run Analysis</button>
+            </div>
+            <div class="stat-output-area" id="stat-output-regression">
+              <div class="stat-placeholder">Run the analysis to compute the regression model.</div>
+            </div>
+          </div>
+
+          <!-- Module 2: ANOVA / t-test -->
+          <div class="stat-module" id="stat-module-anova">
+            <div class="stat-module-header">
+              <div>
+                <div class="stat-module-tag">Module 2</div>
+                <h3 class="stat-module-title">Paired t-Test: Baseline vs. Final GAD-7</h3>
+                <p class="stat-module-desc">Testing whether the mean GAD-7 anxiety score significantly decreased from the first check-in (baseline) to the most recent check-in across all participants.</p>
+              </div>
+              <button class="btn stat-run-btn" onclick="app.runAnovaAnalysis()" id="btn-run-anova">Run Analysis</button>
+            </div>
+            <div class="stat-output-area" id="stat-output-anova">
+              <div class="stat-placeholder">Run the analysis to compute the t-test.</div>
+            </div>
+          </div>
+
+          <!-- Module 3: NLP Trigger Analysis -->
+          <div class="stat-module" id="stat-module-nlp">
+            <div class="stat-module-header">
+              <div>
+                <div class="stat-module-tag">Module 3</div>
+                <h3 class="stat-module-title">NLP: Anxiety Trigger Text Analysis</h3>
+                <p class="stat-module-desc">Natural language processing on all stress trigger descriptions from assessments and mood journals to identify and categorize the most common anxiety drivers.</p>
+              </div>
+              <button class="btn stat-run-btn" onclick="app.runNlpAnalysis()" id="btn-run-nlp">Run Analysis</button>
+            </div>
+            <div class="stat-output-area" id="stat-output-nlp">
+              <div class="stat-placeholder">Run the analysis to process trigger texts.</div>
+            </div>
+          </div>
+
+          <h2>Registered Participant Progress Overview</h2>
+          <div class="admin-table-container">
+            <table class="admin-table" id="admin-participants-table">
+              <thead>
+                <tr>
+                  <th>Participant ID</th>
+                  <th>Reg. Date</th>
+                  <th>Assessments</th>
+                  <th>Latest GAD-7</th>
+                  <th>Latest Severity</th>
+                  <th>Completed Tasks</th>
+                  <th>Has Feedback?</th>
+                  <th style="text-align: center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Rendered via app.js -->
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <div class="dashboard-grid">
-          <div class="dashboard-section">
-            <span class="dashboard-section-title">Enrolled Participants</span>
-            <div class="stat-large" id="admin-stat-users">0</div>
+        <!-- 13b. ADMIN DETAIL VIEW -->
+        <div id="admin-detail-view" style="display: none;">
+          <div class="flex-row-space" style="margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+            <div>
+              <button class="btn btn-secondary btn-small" onclick="app.closeParticipantDetails()" style="margin-bottom: 0.5rem;">&larr; Back to Overview</button>
+              <h1 id="admin-detail-title" style="margin: 0; padding: 0; border: none;">Participant Details: --</h1>
+              <p style="margin: 0.25rem 0 0 0;" id="admin-detail-subtitle">Registration Date: --</p>
+            </div>
           </div>
-          <div class="dashboard-section">
-            <span class="dashboard-section-title">Total Assessments Logged</span>
-            <div class="stat-large" id="admin-stat-assessments">0</div>
-          </div>
-          <div class="dashboard-section">
-            <span class="dashboard-section-title">Feedback Response Rate</span>
-            <div class="stat-large" id="admin-stat-feedback">0%</div>
-          </div>
-        </div>
 
-        <h2>Registered Participant Progress Overview</h2>
-        <div class="admin-table-container">
-          <table class="admin-table" id="admin-participants-table">
-            <thead>
-              <tr>
-                <th>Participant ID</th>
-                <th>Reg. Date</th>
-                <th>Assessments</th>
-                <th>Latest GAD-7</th>
-                <th>Latest Severity</th>
-                <th>Completed Tasks</th>
-                <th>Has Feedback?</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Rendered via app.js -->
-            </tbody>
-          </table>
+          <!-- Participant Statistics -->
+          <h2>Symptom & Activity Summary Statistics</h2>
+          <div class="dashboard-grid" style="margin-bottom: 2rem;">
+            <div class="dashboard-section">
+              <span class="dashboard-section-title">Average GAD-7 Score</span>
+              <div class="stat-large" id="admin-detail-stat-avg-gad7">--</div>
+              <div id="admin-detail-stat-latest-gad7" style="font-size: 0.85rem; color: var(--text-secondary);">Latest: -- (--)</div>
+            </div>
+            <div class="dashboard-section">
+              <span class="dashboard-section-title">Average Sleep Quality</span>
+              <div class="stat-large" id="admin-detail-stat-avg-sleep">--</div>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">Scale: 0 (Poor) to 10 (Restful)</div>
+            </div>
+            <div class="dashboard-section">
+              <span class="dashboard-section-title">Average Avoidance</span>
+              <div class="stat-large" id="admin-detail-stat-avg-avoidance">--</div>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">Scale: 0 (None) to 10 (Severe)</div>
+            </div>
+            <div class="dashboard-section">
+              <span class="dashboard-section-title">Completions & Logs</span>
+              <div class="stat-large" id="admin-detail-stat-counts">--</div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary);" id="admin-detail-stat-counts-sub">-- exercises, -- journals</div>
+            </div>
+          </div>
+
+          <!-- Trend Graph -->
+          <div class="flex-row-space" style="margin-bottom: 0.5rem; justify-content: flex-start; gap: 1.5rem;">
+            <h3 style="margin: 0; border: none; padding: 0;">Symptom Trend Graph</h3>
+            <div style="display: flex; gap: 1rem; align-items: center; font-size: 0.85rem; flex-wrap: wrap;">
+              <label class="consent-item" style="margin: 0; gap: 0.3rem; font-weight: 500; display: inline-flex; align-items: center; cursor: pointer;">
+                <input type="checkbox" id="admin-toggle-overlay-sleep" onchange="app.refreshParticipantGraph()" style="width: 0.9rem; height: 0.9rem; margin: 0; accent-color: var(--accent-slate);" checked>
+                <span style="color: var(--accent-slate); border-bottom: 1px dashed var(--accent-slate);">Overlay Sleep (0-10)</span>
+              </label>
+              <label class="consent-item" style="margin: 0; gap: 0.3rem; font-weight: 500; display: inline-flex; align-items: center; cursor: pointer;">
+                <input type="checkbox" id="admin-toggle-overlay-avoidance" onchange="app.refreshParticipantGraph()" style="width: 0.9rem; height: 0.9rem; margin: 0; accent-color: var(--alert-red);" checked>
+                <span style="color: var(--alert-red); border-bottom: 1px dashed var(--alert-red);">Overlay Avoidance (0-10)</span>
+              </label>
+            </div>
+          </div>
+          <div id="admin-detail-graph-wrapper" class="trend-svg-container" style="margin-bottom: 2.5rem;">
+            <!-- Populated dynamically -->
+          </div>
+
+          <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2.5rem;">
+            <!-- Coping Plan -->
+            <div class="dashboard-section" style="background-color: #fffefb;">
+              <span class="dashboard-section-title">Personalized Coping Plan</span>
+              <div id="admin-detail-coping-container">
+                <p><strong>Triggers:</strong> <span id="admin-detail-coping-triggers">--</span></p>
+                <p style="margin-top: 0.75rem;"><strong>Strategies:</strong> <span id="admin-detail-coping-strategies">--</span></p>
+                <p style="margin-top: 0.75rem;"><strong>Support Contacts:</strong> <span id="admin-detail-coping-supports">--</span></p>
+              </div>
+            </div>
+
+            <!-- Interventions Completed -->
+            <div class="dashboard-section" style="background-color: #fbfdfb;">
+              <span class="dashboard-section-title">Exercises & Interventions Completed</span>
+              <ul id="admin-detail-completions-list" style="padding-left: 1.2rem; font-size: 0.9rem; margin: 0;">
+                <!-- Populated dynamically -->
+              </ul>
+            </div>
+          </div>
+
+          <!-- Feedback survey response -->
+          <div class="dashboard-section" style="margin-bottom: 2.5rem; background-color: #fbfcfd;">
+            <span class="dashboard-section-title">Usability & Trust Survey Feedback</span>
+            <div id="admin-detail-feedback-container" style="font-size: 0.9rem;">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Daily Mood & Trigger Journal logs -->
+          <h2>Daily Mood & Trigger Journal Logs</h2>
+          <p class="slider-desc">Chronological feed of micro-reflections and daily parameter logs.</p>
+          <div id="admin-detail-journal-feed" class="spacious-list" style="margin-top: 1rem; margin-bottom: 2.5rem; max-height: 350px; overflow-y: auto; border: 1px solid var(--border-color); padding: 1rem; background-color: var(--bg-primary);">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- Detailed Questionnaire History -->
+          <h2>Check-In Questionnaire Detail History</h2>
+          <p class="slider-desc">Click "Expand Detail" to view individual GAD-7 answers, stress triggers, and support-seeking feedback.</p>
+          <div class="admin-table-container" style="margin-bottom: 3rem;">
+            <table class="admin-table" id="admin-detail-assessments-table">
+              <thead>
+                <tr>
+                  <th>Check-In Date</th>
+                  <th>GAD-7 Score</th>
+                  <th>Severity Level</th>
+                  <th>Sleep (0-10)</th>
+                  <th>Avoidance (0-10)</th>
+                  <th>Daily Chores (0-10)</th>
+                  <th style="text-align: center;">Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -1086,12 +1275,26 @@
     </div>
   </div>
 
+  <!-- Import Loading Overlay -->
+  <div id="import-loading-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; color: white; font-family: var(--font-sans); flex-direction: column;">
+    <div style="background: var(--bg-primary); color: var(--text-primary); padding: 2rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 400px; width: 90%;">
+      <h3 style="margin-top: 0; margin-bottom: 1rem; color: var(--text-primary);">Importing Dataset</h3>
+      <div id="import-progress-text" style="font-size: 1.1rem; margin-bottom: 1rem; font-weight: 600; color: var(--text-primary);">Processing...</div>
+      <div style="width: 100%; background: var(--bg-secondary); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem;">
+        <div id="import-progress-bar" style="width: 0%; height: 100%; background: var(--accent-sage); transition: width 0.15s ease;"></div>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Please keep this tab open while the records are imported into Supabase.</p>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
-  <script src="database.js?v=1.0.7"></script>
-  <script src="rules.js?v=1.0.7"></script>
-  <script src="data-export.js?v=1.0.7"></script>
-  <script src="app.js?v=1.0.7"></script>
+  <script src="js/database.js?v=1.2.0"></script>
+  <script src="js/rules.js?v=1.2.0"></script>
+  <script src="js/data-export.js?v=1.2.0"></script>
+  <script src="js/statistics.js?v=1.2.0"></script>
+  <script src="js/admin.js?v=1.2.0"></script>
+  <script src="js/app.js?v=1.2.0"></script>
 </body>
 
 </html>

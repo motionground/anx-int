@@ -385,14 +385,14 @@ class AppController {
       }
     } else {
       // User is logged in
-      if (!this.currentUser.isConsentGiven) {
-        if (hash !== "consent") {
-          window.location.hash = "#consent";
-          return;
-        }
-      } else if (this.currentUser.isAdmin) {
+      if (this.currentUser.isAdmin) {
         if (hash !== "admin") {
           window.location.hash = "#admin";
+          return;
+        }
+      } else if (!this.currentUser.isConsentGiven) {
+        if (hash !== "consent") {
+          window.location.hash = "#consent";
           return;
         }
       } else {
@@ -530,7 +530,10 @@ class AppController {
 
     try {
       if (isRegister) {
-        const studyCode = "P-" + Math.floor(100 + Math.random() * 900);
+        let studyCode = "P-" + Math.floor(100 + Math.random() * 900);
+        if (email.toLowerCase().includes("researcher")) {
+          studyCode = "RESEARCHER-" + Math.floor(1000 + Math.random() * 9000);
+        }
         const fullName = document.getElementById("auth-full-name").value;
         const res = await DB.signUp(email, password, studyCode, fullName);
         if (res.success) {
@@ -1602,59 +1605,59 @@ class AppController {
   }
 
   // 12. Admin Dashboard View Loader
+
+  // 12. Admin Dashboard Proxy Delegate Methods (Delegated to AdminController)
   async loadAdminDashboard() {
-    if (!this.currentUser || !this.currentUser.isAdmin) return;
-
-    const adminData = await DB.getAdminData();
-    
-    const totalAssessments = adminData.reduce((sum, p) => sum + (typeof p.assessmentCount === 'number' ? p.assessmentCount : 0), 0);
-    const feedbackCount = adminData.filter(p => p.hasProvidedFeedback).length;
-
-    document.getElementById("admin-stat-users").innerText = adminData.length;
-    document.getElementById("admin-stat-assessments").innerText = totalAssessments;
-    
-    const feedbackRate = adminData.length > 0 
-      ? Math.round((feedbackCount / adminData.length) * 100) 
-      : 0;
-    document.getElementById("admin-stat-feedback").innerText = `${feedbackRate}%`;
-
-    // Render Participant lists
-    const tbody = document.getElementById("admin-participants-table").querySelector("tbody");
-    tbody.innerHTML = "";
-
-    if (adminData.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No participant accounts registered.</td></tr>`;
-      return;
-    }
-
-    adminData.forEach(p => {
-      const regDate = new Date(p.registrationDate).toLocaleDateString();
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td style="font-weight:600;">${p.participantId}</td>
-        <td>${regDate}</td>
-        <td>${p.assessmentCount}</td>
-        <td style="font-weight:600;">${p.latestScore}</td>
-        <td><span class="severity-indicator ${(p.latestSeverity || 'Minimal').toLowerCase()}">${p.latestSeverity}</span></td>
-        <td>${p.completedInterventionsCount}</td>
-        <td>${p.hasProvidedFeedback ? 'Yes' : 'No'}</td>
-      `;
-      tbody.appendChild(tr);
-    });
+    return AdminController.loadAdminDashboard();
   }
 
-  // CSV Data Exports
+  async showParticipantDetails(participantId) {
+    return AdminController.showParticipantDetails(participantId);
+  }
+
+  closeParticipantDetails() {
+    return AdminController.closeParticipantDetails();
+  }
+
+  toggleAssessmentRowDetail(detailId, button) {
+    return AdminController.toggleAssessmentRowDetail(detailId, button);
+  }
+
+  refreshParticipantGraph() {
+    return AdminController.refreshParticipantGraph();
+  }
+
+  importDatasetCSV(event) {
+    return AdminController.importDatasetCSV(event);
+  }
+
+  exportAllStudyCSV() {
+    return AdminController.exportAllStudyCSV();
+  }
+
+  runRegressionAnalysis() {
+    return AdminController.runRegressionAnalysis();
+  }
+
+  runAnovaAnalysis() {
+    return AdminController.runAnovaAnalysis();
+  }
+
+  runNlpAnalysis() {
+    return AdminController.runNlpAnalysis();
+  }
+
+  runAllStatisticalAnalyses() {
+    return AdminController.runAllStatisticalAnalyses();
+  }
+
   async exportPersonalCSV() {
     if (!this.currentUser) return;
     const assessments = await DB.getAssessments(this.currentUser.email);
     CSVExporter.exportParticipantHistory(assessments, this.currentUser.participantId);
   }
 
-  async exportAllStudyCSV() {
-    if (!this.currentUser || !this.currentUser.isAdmin) return;
-    const rawAssessments = await DB.getAllAssessmentsRaw();
-    CSVExporter.exportAllResearcherData(rawAssessments);
-  }
+
 }
 
 // Global Instantiate
