@@ -244,15 +244,6 @@ const AdminController = (() => {
       html += `<div><strong>${m.label}:</strong> <span style='display:inline-block;margin-left:0.5rem;'>${stars} (${val}/5)</span></div>`;
     });
     html += '</div>';
-
-    if (feedback.openText) {
-      html += `<div style='border-top:1px dashed var(--border-color);padding-top:0.75rem;margin-top:0.75rem;'>
-        <strong>Open-Text Feedback:</strong>
-        <p style='margin:0.25rem 0 0 0;font-style:italic;font-size:0.92rem;color:var(--text-primary);'>"${feedback.openText}"</p>
-      </div>`;
-    } else {
-      html += `<div><strong>Open-Text Feedback:</strong> <em>None provided.</em></div>`;
-    }
     container.innerHTML = html;
   }
 
