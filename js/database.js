@@ -23,6 +23,37 @@ function getSeverityFromScore(score) {
   return "Minimal";
 }
 
+async function fetchAllRows(tableName, selectColumns = '*') {
+  let allData = [];
+  let start = 0;
+  const limit = 1000;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data, error } = await supabaseClient
+      .from(tableName)
+      .select(selectColumns)
+      .range(start, start + limit - 1);
+
+    if (error) {
+      console.error(`Error fetching all rows from ${tableName}:`, error);
+      break;
+    }
+
+    if (data && data.length > 0) {
+      allData = allData.concat(data);
+      start += limit;
+      if (data.length < limit) {
+        hasMore = false;
+      }
+    } else {
+      hasMore = false;
+    }
+  }
+
+  return allData;
+}
+
 const DB = {
   async initialize() {
     try {
@@ -528,9 +559,7 @@ const DB = {
       .select('*')
       .eq('is_admin', false);
 
-    const { data: assessments } = await supabaseClient
-      .from('assessments')
-      .select('user_id');
+    const assessments = await fetchAllRows('assessments', 'user_id');
 
     return (profiles || []).map(p => {
       const count = (assessments || []).filter(a => a.user_id === p.id).length;
@@ -548,17 +577,9 @@ const DB = {
       .select('*')
       .eq('is_admin', false);
     
-    const { data: assessments } = await supabaseClient
-      .from('assessments')
-      .select('*');
-
-    const { data: completions } = await supabaseClient
-      .from('completions')
-      .select('*');
-
-    const { data: feedback } = await supabaseClient
-      .from('feedback')
-      .select('*');
+    const assessments = await fetchAllRows('assessments');
+    const completions = await fetchAllRows('completions');
+    const feedback = await fetchAllRows('feedback');
 
     return (profiles || []).map(p => {
       const userAssess = (assessments || [])
@@ -585,10 +606,8 @@ const DB = {
       .from('profiles')
       .select('*');
 
-    const { data: assessments } = await supabaseClient
-      .from('assessments')
-      .select('*')
-      .order('timestamp', { ascending: true });
+    const assessments = await fetchAllRows('assessments');
+    assessments.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
     return (assessments || []).map(a => {
       const p = (profiles || []).find(prof => prof.id === a.user_id);
@@ -702,23 +721,14 @@ const DB = {
   },
 
   async getCohortAnalyticsData() {
-    const { data: assessments } = await supabaseClient
-      .from('assessments')
-      .select('*')
-      .order('timestamp', { ascending: true });
+    const assessments = await fetchAllRows('assessments');
+    const feedback = await fetchAllRows('feedback');
+    const journal = await fetchAllRows('journal');
+    const completions = await fetchAllRows('completions');
 
-    const { data: feedback } = await supabaseClient
-      .from('feedback')
-      .select('*');
-
-    const { data: journal } = await supabaseClient
-      .from('journal')
-      .select('*')
-      .order('timestamp', { ascending: true });
-
-    const { data: completions } = await supabaseClient
-      .from('completions')
-      .select('*');
+    // Sort by timestamp
+    assessments.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    journal.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
     return {
       assessments: assessments || [],
@@ -839,21 +849,10 @@ const DB = {
       .select('*')
       .eq('is_admin', false);
 
-    const { data: assessments } = await supabaseClient
-      .from('assessments')
-      .select('*');
-
-    const { data: completions } = await supabaseClient
-      .from('completions')
-      .select('*');
-
-    const { data: feedback } = await supabaseClient
-      .from('feedback')
-      .select('*');
-
-    const { data: journal } = await supabaseClient
-      .from('journal')
-      .select('*');
+    const assessments = await fetchAllRows('assessments');
+    const completions = await fetchAllRows('completions');
+    const feedback = await fetchAllRows('feedback');
+    const journal = await fetchAllRows('journal');
 
     const profs = profiles || [];
     const assess = assessments || [];
