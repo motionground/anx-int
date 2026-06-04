@@ -1005,11 +1005,8 @@
           <div class="flex-row-space" style="margin-bottom: 2rem;">
             <div>
               <h1>Study Administration & Researcher Panel</h1>
-              <p>Monitor global anonymized participant metrics, survey compliance, and export data spreadsheets.</p>
             </div>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
-              <button class="btn btn-small btn-secondary" onclick="document.getElementById('import-csv-input').click()">Import Dataset (CSV)</button>
-              <input type="file" id="import-csv-input" accept=".csv" style="display: none;" onchange="app.importDatasetCSV(event)">
               <button class="btn btn-small" onclick="app.exportAllStudyCSV()">Export All Assessments CSV</button>
             </div>
           </div>
@@ -1020,7 +1017,7 @@
               <div class="stat-large" id="admin-stat-users">0</div>
             </div>
             <div class="dashboard-section">
-              <span class="dashboard-section-title">Total Assessments Logged</span>
+              <span class="dashboard-section-title">Total Check-ins Logged</span>
               <div class="stat-large" id="admin-stat-assessments">0</div>
             </div>
             <div class="dashboard-section">
@@ -1031,20 +1028,12 @@
 
           <!-- Cohort Statistical Analysis Suite -->
           <h2 style="margin-top: 2.5rem;">Cohort Statistical Analysis Suite</h2>
-          <p class="slider-desc" style="margin-bottom: 0.75rem;">Advanced clinical research analytics aggregated across all participants. Click <strong>Run Analysis</strong> on each module to compute results from the full dataset.</p>
           <button class="btn stat-run-all-btn" id="stat-run-all-btn" onclick="app.runAllStatisticalAnalyses()">
             ▶ Run All Analyses
           </button>
 
           <!-- Participant Selector for Analysis Scope -->
           <div class="stat-participant-selector" id="stat-participant-selector">
-            <div class="stat-selector-header">
-              <div class="stat-selector-title-row">
-                <span class="stat-selector-icon">👥</span>
-                <h3 class="stat-selector-title">Analysis Scope — Select Participants</h3>
-              </div>
-              <p class="stat-selector-desc">Choose which participants to include in the analyses below. Select one, multiple, or all.</p>
-            </div>
             <div class="stat-selector-controls">
               <button class="btn btn-small btn-secondary" id="stat-select-all-btn" onclick="AdminController.selectAllParticipants()">Select All</button>
               <button class="btn btn-small btn-secondary" id="stat-deselect-all-btn" onclick="AdminController.deselectAllParticipants()">Deselect All</button>
@@ -1101,6 +1090,20 @@
             </div>
           </div>
 
+          <!-- Module 4: Usability & Trust Survey Feedback -->
+          <div class="stat-module" id="stat-module-feedback">
+            <div class="stat-module-header">
+              <div>
+                <div class="stat-module-tag">Module 4</div>
+                <h3 class="stat-module-title">Usability &amp; Trust Survey Feedback</h3>
+              </div>
+              <button class="btn stat-run-btn" onclick="app.runFeedbackAnalysis()" id="btn-run-feedback">Run Analysis</button>
+            </div>
+            <div class="stat-output-area" id="stat-output-feedback">
+              <div class="stat-placeholder">Run the analysis to compute usability and trust metrics.</div>
+            </div>
+          </div>
+
           <h2>Registered Participant Progress Overview</h2>
           <div class="admin-table-container">
             <table class="admin-table" id="admin-participants-table">
@@ -1108,7 +1111,7 @@
                 <tr>
                   <th>Participant ID</th>
                   <th>Reg. Date</th>
-                  <th>Assessments</th>
+                  <th>Total Check-ins</th>
                   <th>Latest GAD-7</th>
                   <th>Latest Severity</th>
                   <th>Completed Tasks</th>

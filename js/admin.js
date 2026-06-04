@@ -94,7 +94,8 @@ const AdminController = (() => {
     const modules = [
       { id: 'stat-output-regression', msg: 'Run the analysis to compute the regression model.' },
       { id: 'stat-output-anova',      msg: 'Run the analysis to compute the t-test.' },
-      { id: 'stat-output-nlp',        msg: 'Run the analysis to process trigger texts.' }
+      { id: 'stat-output-nlp',        msg: 'Run the analysis to process trigger texts.' },
+      { id: 'stat-output-feedback',   msg: 'Run the analysis to compute usability and trust metrics.' }
     ];
     modules.forEach(m => {
       const el = document.getElementById(m.id);
@@ -103,7 +104,7 @@ const AdminController = (() => {
     // Set run buttons based on whether any participant is selected
     const grid = document.getElementById('stat-selector-grid');
     const anySelected = grid ? grid.querySelectorAll('input[type="checkbox"]:checked').length > 0 : false;
-    ['btn-run-regression', 'btn-run-anova', 'btn-run-nlp', 'stat-run-all-btn'].forEach(id => {
+    ['btn-run-regression', 'btn-run-anova', 'btn-run-nlp', 'btn-run-feedback', 'stat-run-all-btn'].forEach(id => {
       const btn = document.getElementById(id);
       if (btn) btn.disabled = !anySelected;
     });
@@ -126,7 +127,8 @@ const AdminController = (() => {
     if (!detail) return;
 
     // Header
-    document.getElementById('admin-detail-title').innerText    = `Participant Details: ${detail.participantId} (${detail.fullName})`;
+    const namePart = (detail.fullName && detail.fullName !== 'undefined' && detail.fullName !== 'null') ? ` (${detail.fullName})` : '';
+    document.getElementById('admin-detail-title').innerText    = `Participant Details: ${detail.participantId}${namePart}`;
     document.getElementById('admin-detail-subtitle').innerText = `Registration Date: ${new Date(detail.registrationDate).toLocaleString()}`;
 
     const assessments = detail.assessments || [];
@@ -266,13 +268,15 @@ const AdminController = (() => {
 
     entries.forEach(e => {
       const div = document.createElement('div');
-      div.className = 'journal-log-entry';
+      div.style.borderBottom = '1px dashed var(--border-color)';
+      div.style.padding = '0.5rem 0';
+      div.style.fontSize = '0.8rem';
+      div.style.color = 'var(--text-secondary)';
       div.innerHTML = `
-        <div style="font-size:0.8rem;color:var(--text-muted);font-weight:500;">
-          ${new Date(e.timestamp).toLocaleString()} | Mood Score: <strong>${e.mood}/10</strong>
-        </div>
-        ${e.triggers ? `<p class="slider-desc" style="margin:0.1rem 0;">Triggers: <em>${e.triggers}</em></p>` : ''}
-        <p style="margin-top:0.25rem;font-size:0.92rem;color:var(--text-primary);font-weight:400;">"${e.note}"</p>
+        <div style="margin-bottom: 0.15rem;"><strong>Date:</strong> ${new Date(e.timestamp).toLocaleString()}</div>
+        <div style="margin-bottom: 0.15rem;"><strong>Mood Score:</strong> ${e.mood}/10</div>
+        ${e.triggers ? `<div style="margin-bottom: 0.15rem;"><strong>Triggers:</strong> ${e.triggers}</div>` : ''}
+        <div style="margin-top: 0.25rem; color: var(--text-primary);"><strong>Note:</strong> "${e.note}"</div>
       `;
       feed.appendChild(div);
     });
@@ -323,7 +327,7 @@ const AdminController = (() => {
         <td>${a.indicators?.avoidance}/10</td>
         <td>${a.indicators?.functioning}/10</td>
         <td style="text-align:center;">
-          <button class="btn btn-secondary btn-small"
+          <button class="btn btn-small" style="background-color: transparent; color: var(--text-secondary); border: 1px solid var(--border-color); cursor: pointer;"
             onclick="app.toggleAssessmentRowDetail('${detailId}', this)">Expand Detail</button>
         </td>
       `;
@@ -333,7 +337,7 @@ const AdminController = (() => {
       const detailTr = document.createElement('tr');
       detailTr.id    = detailId;
       detailTr.style.display         = 'none';
-      detailTr.style.backgroundColor = 'var(--accent-blue-light)';
+      detailTr.style.backgroundColor = 'var(--bg-secondary)';
 
       let gadHTML = "<ul style='margin:0;padding-left:1.2rem;font-size:0.82rem;'>";
       for (let qi = 0; qi < 7; qi++) {
@@ -708,7 +712,7 @@ const AdminController = (() => {
 
     // Disable run buttons if no participants are selected
     const anySelected = checked.length > 0;
-    ['btn-run-regression', 'btn-run-anova', 'btn-run-nlp', 'stat-run-all-btn'].forEach(id => {
+    ['btn-run-regression', 'btn-run-anova', 'btn-run-nlp', 'btn-run-feedback', 'stat-run-all-btn'].forEach(id => {
       const btn = document.getElementById(id);
       if (btn) btn.disabled = !anySelected;
     });
@@ -776,6 +780,7 @@ const AdminController = (() => {
   const runRegressionAnalysis     = () => StatisticsModule.runRegressionAnalysis(getSelectedUserIds());
   const runAnovaAnalysis          = () => StatisticsModule.runAnovaAnalysis(getSelectedUserIds());
   const runNlpAnalysis            = () => StatisticsModule.runNlpAnalysis(getSelectedUserIds());
+  const runFeedbackAnalysis       = () => StatisticsModule.runFeedbackAnalysis(getSelectedUserIds());
   const runAllStatisticalAnalyses = () => StatisticsModule.runAllStatisticalAnalyses(getSelectedUserIds());
 
   // ─── Public API ───────────────────────────────────────────────────────
@@ -793,6 +798,7 @@ const AdminController = (() => {
     runRegressionAnalysis,
     runAnovaAnalysis,
     runNlpAnalysis,
+    runFeedbackAnalysis,
     runAllStatisticalAnalyses,
     selectAllParticipants,
     deselectAllParticipants,

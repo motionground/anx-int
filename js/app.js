@@ -1647,6 +1647,10 @@ class AppController {
     return AdminController.runNlpAnalysis();
   }
 
+  runFeedbackAnalysis() {
+    return AdminController.runFeedbackAnalysis();
+  }
+
   runAllStatisticalAnalyses() {
     return AdminController.runAllStatisticalAnalyses();
   }

@@ -12,7 +12,7 @@
 }
 
 .admin-table th {
-  background-color: var(--accent-blue-light);
+  background-color: var(--bg-secondary);
   padding: 0.75rem;
   text-align: left;
   border-bottom: 1px solid var(--border-color);
@@ -25,7 +25,7 @@
 }
 
 .admin-table tr:hover td {
-  background-color: var(--accent-sage-light);
+  background-color: var(--bg-secondary);
 }
 
 /* Rating inputs in Feedback form */
@@ -347,7 +347,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background-color: var(--accent-sage);
+  background-color: #4a5568;
   color: white;
   border: none;
   border-radius: 4px;
@@ -359,7 +359,7 @@
   margin-top: 0.25rem;
   transition: background-color 0.15s;
 }
-.stat-run-all-btn:hover { background-color: #2f4e3a; }
+.stat-run-all-btn:hover { background-color: #2d3748; }
 .stat-run-all-btn:disabled { opacity: 0.6; cursor: wait; }
 
 .stat-module {
@@ -386,8 +386,8 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--accent-sage);
-  border: 1px solid var(--accent-sage);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 3px;
   padding: 0.1rem 0.5rem;
   margin-bottom: 0.4rem;
@@ -410,7 +410,7 @@
 .stat-run-btn {
   white-space: nowrap;
   padding: 0.5rem 1.1rem;
-  background-color: var(--accent-sage);
+  background-color: #4a5568;
   color: white;
   border: none;
   border-radius: 4px;
@@ -420,7 +420,7 @@
   transition: background-color 0.15s, opacity 0.15s;
   flex-shrink: 0;
 }
-.stat-run-btn:hover { background-color: #2f4e3a; }
+.stat-run-btn:hover { background-color: #2d3748; }
 .stat-run-btn:disabled { opacity: 0.55; cursor: wait; }
 
 .stat-output-area { padding: 1.5rem; }
@@ -455,7 +455,7 @@
   padding: 0.45rem 0.75rem;
   border: 1px solid var(--border-color);
 }
-.stat-coef-table tr:hover td { background-color: var(--accent-sage-light); }
+.stat-coef-table tr:hover td { background-color: var(--bg-secondary); }
 
 .stat-result-row {
   display: flex;
@@ -500,20 +500,20 @@
   letter-spacing: 0.04em;
 }
 .stat-sig-badge.significant {
-  background-color: var(--accent-sage-light);
-  color: var(--accent-sage);
-  border: 1px solid var(--accent-sage);
+  background-color: #f0f4f0;
+  color: #4a5568;
+  border: 1px solid #a0aec0;
 }
 .stat-sig-badge.not-significant {
-  background-color: var(--alert-red-light);
-  color: var(--alert-red);
-  border: 1px solid var(--alert-red);
+  background-color: #fef5f5;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
 }
 
 .stat-insight-block {
-  background-color: var(--accent-sage-light);
+  background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-left: 3px solid var(--accent-sage);
+  border-left: 3px solid #a0aec0;
   padding: 0.9rem 1.1rem;
   border-radius: 4px;
   font-size: 0.85rem;
@@ -521,7 +521,7 @@
   color: var(--text-primary);
   margin-top: 1rem;
 }
-.stat-insight-block strong { color: var(--accent-sage); }
+.stat-insight-block strong { color: var(--text-primary); }
 
 .nlp-category-row {
   display: flex;
@@ -628,12 +628,12 @@
 .stat-selector-count {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--accent-sage);
+  color: var(--text-secondary);
   margin-left: auto;
-  background-color: var(--accent-sage-light);
+  background-color: var(--bg-secondary);
   padding: 0.2rem 0.75rem;
   border-radius: 12px;
-  border: 1px solid var(--accent-sage);
+  border: 1px solid var(--border-color);
   white-space: nowrap;
 }
 
@@ -658,21 +658,18 @@
 }
 
 .stat-selector-chip:hover {
-  border-color: var(--accent-sage);
-  background-color: var(--accent-sage-light);
+  /* No special highlight on hover */
 }
 
 .stat-selector-chip.selected {
-  border-color: var(--accent-sage);
-  background-color: var(--accent-sage-light);
-  box-shadow: 0 0 0 1px var(--accent-sage);
+  /* No highlight background or border when selected */
 }
 
 .stat-selector-chip input[type="checkbox"] {
   width: 0.95rem;
   height: 0.95rem;
   margin: 0;
-  accent-color: var(--accent-sage);
+  accent-color: #4a5568;
   cursor: pointer;
   flex-shrink: 0;
 }

@@ -164,13 +164,12 @@ const StatisticsModule = (() => {
 
   // ─── Rendering Helpers ────────────────────────────────────────────────────
 
-  /* Wrap output HTML inside the stat-output area and show an insight block below. */
   function renderOutput(containerId, bodyHTML, insightHTML) {
     const el = document.getElementById(containerId);
     if (!el) return;
     el.innerHTML = `
       <div>${bodyHTML}</div>
-      <div class="stat-insight-block">${insightHTML}</div>
+      ${insightHTML ? `<div class="stat-insight-block">${insightHTML}</div>` : ''}
     `;
   }
 
@@ -672,47 +671,35 @@ const StatisticsModule = (() => {
   const CATEGORIES = [
     {
       name: 'Academic / Study',
-      color: 'var(--accent-slate)',
-      bg: 'var(--accent-blue-light)',
       keywords: ['exam','exams','dissertation','assignment','assignments','deadline','deadlines',
                  'study','studying','grade','grades','university','college','coursework',
                  'lecture','lectures','presentation','revision','essay','thesis','research','coursework']
     },
     {
       name: 'Social / Relationships',
-      color: 'var(--accent-lavender)',
-      bg: 'var(--accent-lavender-light)',
       keywords: ['social','people','friends','friend','relationship','relationships','isolation',
                  'loneliness','lonely','interaction','interactions','conversation','party',
                  'gatherings','group','conflict','confrontation','dating','rejection']
     },
     {
       name: 'Health / Medical',
-      color: 'var(--alert-red)',
-      bg: 'var(--alert-red-light)',
       keywords: ['health','illness','sick','sickness','pain','symptoms','symptom','doctor','medical',
                  'hospital','medication','diagnosis','anxiety','panic','condition','chest',
                  'breathing','heart','disease','disorder','appointment']
     },
     {
       name: 'Work / Financial',
-      color: '#7a5c2e',
-      bg: '#f5eddf',
       keywords: ['work','job','boss','manager','career','money','financial','finance','rent',
                  'bills','debt','budget','salary','income','redundancy','interview','promotion',
                  'performance','colleague','colleagues','meeting','meetings']
     },
     {
       name: 'Sleep / Physical',
-      color: 'var(--accent-sage)',
-      bg: 'var(--accent-sage-light)',
       keywords: ['sleep','tired','tiredness','fatigue','insomnia','exhaustion','rest','energy',
                  'exercise','tension','headache','eating','diet','body','physical']
     },
     {
       name: 'Future / Uncertainty',
-      color: '#5c6bc0',
-      bg: '#e8eaf6',
       keywords: ['future','uncertainty','uncertain','unknown','worry','worries','worried','change',
                  'decision','decisions','fear','afraid','scared','unknown','plan','plans',
                  'career','direction','purpose','goal']
@@ -797,39 +784,35 @@ const StatisticsModule = (() => {
 
       const totalCategorised = categoryCounts.reduce((s, v) => s + v, 0);
 
-      // Top 20 keywords by raw frequency
+      // Top 5 keywords by raw frequency
       const freq = {};
       allTokens.forEach(t => { freq[t] = (freq[t] || 0) + 1; });
       const topKeywords = Object.entries(freq)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 20);
+        .slice(0, 5);
 
-      // Build category frequency bars
+      // Neutral bar colour — same for all categories
+      const BAR_COLOR = 'var(--text-secondary)';
+
+      // Build category frequency bars (neutral, monochrome)
       const maxCount = Math.max(...categoryCounts, 1);
       const barsHTML = CATEGORIES.map((cat, i) => {
         const pct = Math.round((categoryCounts[i] / maxCount) * 100);
         const rawPct = totalCategorised > 0 ? ((categoryCounts[i] / totalCategorised) * 100).toFixed(0) : 0;
         return `
           <div class="nlp-category-row">
-            <span class="nlp-category-label" style="color:${cat.color};">${cat.name}</span>
+            <span class="nlp-category-label">${cat.name}</span>
             <div class="nlp-bar-track">
-              <div class="nlp-bar-fill" style="width:${pct}%;background:${cat.color};"></div>
+              <div class="nlp-bar-fill" style="width:${pct}%;background:${BAR_COLOR};"></div>
             </div>
             <span class="nlp-count-label">${categoryCounts[i]} <span style="font-size:0.72rem;color:var(--text-muted);">(${rawPct}%)</span></span>
           </div>`;
       }).join('');
 
-      // Keyword cloud — colour-coded by dominant category
-      const chipHTML = topKeywords.map(([word, count]) => {
-        // Find best matching category for this word
-        let chipCat = null;
-        for (const cat of CATEGORIES) {
-          if (cat.keywords.includes(word)) { chipCat = cat; break; }
-        }
-        const bg    = chipCat ? chipCat.bg    : 'var(--bg-secondary)';
-        const color = chipCat ? chipCat.color : 'var(--text-secondary)';
-        const size  = Math.max(0.72, Math.min(1, 0.72 + (count / (topKeywords[0][1])) * 0.3));
-        return `<span class="nlp-keyword-chip" style="background:${bg};color:${color};border-color:${color};font-size:${size}rem;">${word} <strong>${count}</strong></span>`;
+      // Top 5 keyword chips — neutral monochrome, no category colour-coding
+      const chipHTML = topKeywords.map(([word, count], idx) => {
+        const opacity = Math.max(0.5, 1 - idx * 0.12);
+        return `<span class="nlp-keyword-chip" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--border-color);opacity:${opacity};">${word} <strong>${count}</strong></span>`;
       }).join('');
 
       const cards = statResultRow([
@@ -838,22 +821,13 @@ const StatisticsModule = (() => {
         { label: 'Unique Keywords Found', value: Object.keys(freq).length, sub: 'After stop-word removal' }
       ]);
 
-      const dominant = CATEGORIES[categoryCounts.indexOf(Math.max(...categoryCounts))];
-      const insight = `
-        <strong>NLP Insight (${allTexts.length} text entries):</strong>
-        The most frequently reported anxiety driver in this cohort is
-        <strong style="color:${dominant.color};">${dominant.name}</strong>
-        (${Math.max(...categoryCounts)} of ${totalCategorised} categorised entries).
-        This suggests that system recommendations focusing on <strong>${dominant.name}</strong> (such as academic boundary exercises or social support rules) are highly aligned with the actual triggers participants are reporting.
-      `;
-
       const cloudSection = `
         <div style="margin-top:1.25rem;">
-          <p style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-secondary);margin-bottom:0.5rem;">Top Keywords (colour = category)</p>
+          <p style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-secondary);margin-bottom:0.5rem;">Top 5 Keywords by Frequency</p>
           <div class="nlp-keyword-cloud">${chipHTML}</div>
         </div>`;
 
-      renderOutput('stat-output-nlp', cards + barsHTML + cloudSection, insight);
+      renderOutput('stat-output-nlp', cards + barsHTML + cloudSection, '');
 
     } catch (err) {
       console.error('NLP error:', err);
@@ -863,15 +837,108 @@ const StatisticsModule = (() => {
     }
   }
 
+  // ─── Module 4: Usability & Trust Survey Feedback ──────────────────────────
+
+  async function runFeedbackAnalysis(userIds) {
+    setBtnState('btn-run-feedback', true);
+    try {
+      if (Array.isArray(userIds) && userIds.length === 0) {
+        showInsufficient('stat-output-feedback', 'No participants selected. Use the selector above to choose at least one.');
+        return;
+      }
+
+      const data = await DB.getCohortAnalyticsData();
+      let feedback = data.feedback || [];
+
+      // Filter by selected participants if a subset is specified
+      if (Array.isArray(userIds)) {
+        const idSet = new Set(userIds);
+        feedback = feedback.filter(f => idSet.has(f.user_id));
+      }
+
+      if (feedback.length === 0) {
+        showInsufficient('stat-output-feedback', 'No usability and trust feedback survey data available for the selected participants.');
+        return;
+      }
+
+      // Calculate averages
+      const metrics = [
+        { key: 'usability', label: 'System Usability' },
+        { key: 'clarity', label: 'Clarity of Content' },
+        { key: 'trust', label: 'Trust in System' },
+        { key: 'usefulness', label: 'Usefulness' },
+        { key: 'personalization', label: 'Personalization' },
+        { key: 'rule_understanding', label: 'Rule Understanding' },
+        { key: 'continue_use', label: 'Willingness to Continue' }
+      ];
+
+      const averages = {};
+      metrics.forEach(m => {
+        const sum = feedback.reduce((acc, f) => acc + (Number(f[m.key]) || 0), 0);
+        averages[m.key] = sum / feedback.length;
+      });
+
+      // Render summary cards
+      const cards = statResultRow([
+        { label: 'Total Submissions', value: feedback.length, sub: 'Out of active cohort' },
+        { label: 'Avg Usability Score', value: `${averages['usability'].toFixed(1)}/5`, sub: 'Target threshold: >=4.0' },
+        { label: 'Avg Trust Score', value: `${averages['trust'].toFixed(1)}/5`, sub: 'Target threshold: >=4.0' }
+      ]);
+
+      // Draw SVG horizontal bar chart
+      const svgW = 400, svgH = 220;
+      const padL = 130, padR = 40, padT = 15, padB = 20;
+      const chartW = svgW - padL - padR;
+      const rowH = (svgH - padT - padB) / metrics.length;
+
+      let svg = `<svg viewBox="0 0 ${svgW} ${svgH}" style="width:100%; max-width:500px; overflow:visible; font-family:var(--font-sans); margin-top: 1rem;">`;
+      
+      // Draw grid lines for scores 1 to 5
+      for (let s = 1; s <= 5; s++) {
+        const gx = padL + (s / 5) * chartW;
+        svg += `<line x1="${gx}" y1="${padT}" x2="${gx}" y2="${svgH - padB}" stroke="var(--border-color)" stroke-width="0.75" stroke-dasharray="3,3"/>`;
+        svg += `<text x="${gx}" y="${svgH - padB + 12}" text-anchor="middle" style="font-size:9px; fill:var(--text-secondary); font-weight:500;">${s}</text>`;
+      }
+
+      // Draw Y-axis line
+      svg += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${svgH - padB}" stroke="var(--border-color)" stroke-width="1.5"/>`;
+
+      // Render bars
+      metrics.forEach((m, idx) => {
+        const avg = averages[m.key] || 0;
+        const barW = (avg / 5) * chartW;
+        const by = padT + idx * rowH + (rowH - 12) / 2;
+
+        svg += `<rect x="${padL}" y="${by}" width="${barW}" height="12" fill="#4a5568" rx="2" opacity="0.85"/>`;
+        
+        const tx = padL + barW + 6;
+        svg += `<text x="${tx}" y="${by + 9}" text-anchor="start" style="font-size:9px; font-weight:700; fill:var(--text-primary);">${avg.toFixed(2)}</text>`;
+
+        svg += `<text x="${padL - 8}" y="${by + 9}" text-anchor="end" style="font-size:9px; font-weight:500; fill:var(--text-secondary);">${m.label}</text>`;
+      });
+
+      svg += '</svg>';
+
+      renderOutput('stat-output-feedback', cards + svg, '');
+
+    } catch (err) {
+      console.error('Feedback analysis error:', err);
+      showInsufficient('stat-output-feedback', `Error running feedback analysis: ${err.message}`);
+    } finally {
+      setBtnState('btn-run-feedback', false);
+    }
+  }
+
   // ─── Run All ─────────────────────────────────────────────────────────────
 
-  /* Sequentially runs all three analysis modules. */
+  /* Sequentially runs all four analysis modules. */
   async function runAllStatisticalAnalyses(userIds) {
     const btn = document.getElementById('stat-run-all-btn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Running all analyses…'; }
     await runRegressionAnalysis(userIds);
     await runAnovaAnalysis(userIds);
     await runNlpAnalysis(userIds);
+    await runFeedbackAnalysis(userIds);
     if (btn) { btn.disabled = false; btn.textContent = '▶ Run All Analyses'; }
   }
 
@@ -881,6 +948,7 @@ const StatisticsModule = (() => {
     runRegressionAnalysis,
     runAnovaAnalysis,
     runNlpAnalysis,
+    runFeedbackAnalysis,
     runAllStatisticalAnalyses
   };
 
