@@ -133,8 +133,28 @@ const CSVExporter = {
    * @param {Array} rawAssessments 
    */
   exportAllResearcherData(rawAssessments) {
+    // Sort assessments by Participant ID, and then chronologically by timestamp
+    const sorted = [...rawAssessments].sort((a, b) => {
+      if (a.participantId !== b.participantId) {
+        return a.participantId.localeCompare(b.participantId);
+      }
+      return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+    });
+
+    // Add a check-in sequence tracker for each participant's chronological order
+    const participantSequenceMap = {};
+    const formatted = sorted.map(a => {
+      const pid = a.participantId;
+      participantSequenceMap[pid] = (participantSequenceMap[pid] || 0) + 1;
+      return {
+        ...a,
+        sequence: `Check-in #${participantSequenceMap[pid]}`
+      };
+    });
+
     const headers = [
       "Participant ID",
+      "Check-in Sequence",
       "Assessment ISO Timestamp",
       "GAD-7 Q1",
       "GAD-7 Q2",
@@ -159,6 +179,7 @@ const CSVExporter = {
 
     const keys = [
       "participantId",
+      "sequence",
       "timestamp",
       "gad7_q1",
       "gad7_q2",
@@ -181,7 +202,7 @@ const CSVExporter = {
       "ind_support"
     ];
 
-    const csvContent = this.convertToCSV(headers, keys, rawAssessments);
+    const csvContent = this.convertToCSV(headers, keys, formatted);
     this.downloadFile(csvContent, "study_anonymized_assessments.csv");
   }
 };
