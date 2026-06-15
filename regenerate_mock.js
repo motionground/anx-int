@@ -54,7 +54,13 @@ for (let i = 1; i <= 52; i++) {
     const withVal = Math.round(Math.min(10, score * 0.45) * 10) / 10;
     const funcVal = Math.round(Math.max(2, 10 - score * 0.35) * 10) / 10;
 
-    const triggerOptions = ["academic stress","work pressure","social situations","health concerns","financial worry","family issues","sleep problems","deadlines","news","relationship stress","loneliness","public speaking"];
+    const triggerOptions = [
+      "academic stress", "work pressure", "social situations", "health concerns",
+      "financial worry", "family issues", "sleep problems", "deadlines", "news",
+      "relationship stress", "loneliness", "public speaking", "future plans",
+      "career uncertainty", "fear of change", "difficult decisions", "fear of unknown",
+      "worried about future"
+    ];
     const trigger = triggerOptions[Math.floor(Math.random() * triggerOptions.length)];
     const confVal = Math.round(Math.max(1, 10 - score * 0.4) * 10) / 10;
     const supportOptions = ["Yes","No","Yes, spoke to family/friend","Yes, spoke to healthcare professional"];
@@ -95,7 +101,10 @@ for (let i = 1; i <= 52; i++) {
         "Feeling more in control of my anxiety.",
         "Had a setback but trying to stay positive.",
         "Good day overall, kept busy with productive activities.",
-        "Meditation session was really helpful this morning."
+        "Meditation session was really helpful this morning.",
+        "Worried about my future career prospects and landing a job.",
+        "Feeling anxious about upcoming changes and making decisions.",
+        "Struggling with the uncertainty of what lies ahead."
       ];
       journals.push({
         user_id: userId,
@@ -110,7 +119,16 @@ for (let i = 1; i <= 52; i++) {
   }
 
   // Coping plan
-  const trigSets = ["Academic deadlines, late-night screen time","Work pressure, social isolation","Health worries, news consumption","Financial stress, sleep disruption","Relationship conflict, overthinking"];
+  const trigSets = [
+    "Academic deadlines, late-night screen time",
+    "Work pressure, social isolation",
+    "Health worries, news consumption",
+    "Financial stress, sleep disruption",
+    "Relationship conflict, overthinking",
+    "Future plans, career uncertainty",
+    "Making difficult decisions, fear of change",
+    "Fear of unknown, life plan worries"
+  ];
   const stratSets = ["Box breathing, phone-free evenings, daily walks","Progressive relaxation, journaling, time-blocking","Worry postponement, mindfulness, exercise","Grounding techniques, sleep hygiene, social connection","Cognitive restructuring, gratitude practice, nature exposure"];
   const suppSets = ["GP (Dr. Smith), sister Sarah","Counsellor (Ms. Jones), partner","Therapist (Dr. Brown), best friend","University wellbeing service, flatmate","NHS helpline, parent"];
 
