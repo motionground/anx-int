@@ -69,7 +69,7 @@ const DB = {
     const { data: existing, error: checkError } = await supabaseClient
       .from('profiles')
       .select('id')
-      .eq('participant_id', 'P-401')
+      .eq('participant_id', 'P-1001')
       .maybeSingle();
 
     if (existing) {
@@ -79,17 +79,18 @@ const DB = {
 
     console.log("Seeding mock users to Supabase...");
 
-    const mockUsers = [
-      { email: "participant1@test.com", password: "pass123", id: "P-401", name: "Alex Rivera" },
-      { email: "participant2@test.com", password: "pass123", id: "P-904", name: "Jordan Lee" },
-      { email: "participant3@test.com", password: "pass123", id: "P-102", name: "Taylor Smith" },
-      { email: "participant4@test.com", password: "pass123", id: "P-305", name: "Casey Morgan" },
-      { email: "participant5@test.com", password: "pass123", id: "P-511", name: "Morgan Bailey" },
-      { email: "participant6@test.com", password: "pass123", id: "P-782", name: "Jamie Vance" }
-    ];
+
+    const mockUsers = [];
+    for(let i=1; i<=56; i++) {
+      mockUsers.push({
+        email: `participant${i}@v3.test.com`,
+        password: "pass123",
+        id: `P-${1000 + i}`,
+        name: `Participant ${i}`
+      });
+    }
 
     for (const u of mockUsers) {
-      // 1. Sign up the user in auth
       const { data, error } = await supabaseClient.auth.signUp({
         email: u.email,
         password: u.password,
@@ -102,7 +103,6 @@ const DB = {
       });
 
       if (error) {
-        // If user already exists in auth, try to find or link profile
         console.warn(`Sign up warning for ${u.email}:`, error.message);
         continue;
       }
@@ -110,77 +110,62 @@ const DB = {
       const userId = data.user.id;
       console.log(`Successfully registered ${u.email} in Supabase (UUID: ${userId})`);
 
-      // 2. Insert profile
       await supabaseClient.from('profiles').upsert({
         id: userId,
         participant_id: u.id,
         is_consent_given: true,
         is_admin: false,
-        registration_date: new Date().toISOString()
+        registration_date: new Date("2026-05-21T10:00:00Z").toISOString()
       });
 
-      // 3. Seed specific participant parameters
-      if (u.id === "P-401") {
-        await supabaseClient.from('assessments').insert([
-          { user_id: userId, gad7: [2, 3, 2, 2, 2, 2, 2], score: 15, severity: "Severe", timestamp: new Date("2026-05-07T18:00:00Z").toISOString(), indicators: { sleep: 3, avoidance: 8, concentration: 4, irritability: 7, tension: 8, withdrawal: 7, functioning: 3, triggers: "academic stress, presentation coming up", confidence: 4, support: "No" } },
-          { user_id: userId, gad7: [2, 2, 1, 2, 1, 1, 2], score: 11, severity: "Moderate", timestamp: new Date("2026-05-14T18:00:00Z").toISOString(), indicators: { sleep: 5, avoidance: 7, concentration: 5, irritability: 5, tension: 6, withdrawal: 5, functioning: 5, triggers: "deadlines", confidence: 5, support: "Yes" } },
-          { user_id: userId, gad7: [1, 1, 1, 1, 1, 0, 1], score: 6, severity: "Mild", timestamp: new Date("2026-05-21T18:00:00Z").toISOString(), indicators: { sleep: 8, avoidance: 4, concentration: 7, irritability: 3, tension: 3, withdrawal: 3, functioning: 8, triggers: "none", confidence: 8, support: "Yes" } }
-        ]);
-        await supabaseClient.from('completions').insert([
-          { user_id: userId, recommendation_id: "sleep_hygiene", timestamp: new Date("2026-05-14T18:00:00Z").toISOString(), completed: true },
-          { user_id: userId, recommendation_id: "breathing_exercise", timestamp: new Date("2026-05-14T18:00:00Z").toISOString(), completed: true },
-          { user_id: userId, recommendation_id: "worry_postponement", timestamp: new Date("2026-05-21T18:00:00Z").toISOString(), completed: true }
-        ]);
-        await supabaseClient.from('coping_plans').insert({
-          user_id: userId,
-          triggers: "Academic deadlines, late-night screen time",
-          strategies: "5-minute box breathing, turning off phone at 10 PM, daily short walks",
-          supports: "GP (Dr. Smith), my sister Sarah"
+      const assessments = [];
+      const completions = [];
+      const journals = [];
+      
+      let currentDate = new Date("2026-05-21T18:00:00Z");
+      const endDate = new Date("2026-06-06T18:00:00Z");
+      let score = Math.floor(Math.random() * 14) + 6; 
+
+      while (currentDate <= endDate) {
+        const iso = currentDate.toISOString();
+        if (score > 6 && Math.random() > 0.4) score--;
+        else if (score < 20 && Math.random() > 0.8) score++;
+
+        let severity = "Severe";
+        if (score < 15) severity = "Moderate";
+        if (score < 10) severity = "Mild";
+        if (score < 5) severity = "Minimal";
+
+        assessments.push({ 
+          user_id: userId, 
+          gad7: [Math.floor(score/7), Math.floor(score/7), Math.floor(score/7), Math.floor(score/7), Math.floor(score/7), Math.floor(score/7), score % 7], 
+          score: score, 
+          severity: severity, 
+          timestamp: new Date(iso).toISOString(), 
+          indicators: { sleep: Math.max(3, 10 - score/2), avoidance: Math.min(9, score/1.5), concentration: 5, irritability: 5, tension: 5, withdrawal: 5, functioning: 5, triggers: "daily log", confidence: 5, support: "Yes" } 
         });
-        await supabaseClient.from('journal').insert([
-          { user_id: userId, mood: 3, triggers: "Exam", note: "Feeling extremely overwhelmed about my dissertation.", timestamp: new Date("2026-05-07T18:00:00Z").toISOString() },
-          { user_id: userId, mood: 5, triggers: "Late sleep", note: "Managed to sleep a bit better. The breathing exercise helps.", timestamp: new Date("2026-05-14T18:00:00Z").toISOString() },
-          { user_id: userId, mood: 7, triggers: "None", note: "Had a productive week. Anxieties are feeling manageable.", timestamp: new Date("2026-05-21T18:00:00Z").toISOString() }
-        ]);
-      } else if (u.id === "P-904") {
-        await supabaseClient.from('assessments').insert([
-          { user_id: userId, gad7: [3, 3, 3, 3, 2, 2, 2], score: 18, severity: "Severe", timestamp: new Date("2026-05-14T18:00:00Z").toISOString(), indicators: { sleep: 2, avoidance: 9, concentration: 3, irritability: 8, tension: 9, withdrawal: 9, functioning: 2, triggers: "social interactions, job search", confidence: 2, support: "No" } }
-        ]);
-      } else if (u.id === "P-102") {
-        await supabaseClient.from('assessments').insert([
-          { user_id: userId, gad7: [2, 2, 2, 2, 1, 1, 1], score: 12, severity: "Moderate", timestamp: new Date("2026-05-14T18:00:00Z").toISOString(), indicators: { sleep: 4, avoidance: 6, concentration: 5, irritability: 6, tension: 5, withdrawal: 4, functioning: 6, triggers: "workload", confidence: 6, support: "No" } }
-        ]);
-        await supabaseClient.from('coping_plans').insert({
-          user_id: userId,
-          triggers: "Tight deadlines, high workload",
-          strategies: "Short breaks, deep breaths",
-          supports: "My family"
-        });
-        await supabaseClient.from('journal').insert([
-          { user_id: userId, mood: 6, triggers: "Workload", note: "A bit stressed but managing well with short breaks.", timestamp: new Date("2026-05-14T18:00:00Z").toISOString() }
-        ]);
-      } else if (u.id === "P-305") {
-        await supabaseClient.from('assessments').insert([
-          { user_id: userId, gad7: [1, 1, 1, 1, 1, 1, 1], score: 7, severity: "Mild", timestamp: new Date("2026-05-14T18:00:00Z").toISOString(), indicators: { sleep: 7, avoidance: 3, concentration: 8, irritability: 4, tension: 4, withdrawal: 3, functioning: 8, triggers: "social events", confidence: 7, support: "Yes, spoke to family/friend" } }
-        ]);
-      } else if (u.id === "P-511") {
-        await supabaseClient.from('assessments').insert([
-          { user_id: userId, gad7: [3, 2, 3, 2, 3, 2, 2], score: 17, severity: "Severe", timestamp: new Date("2026-05-21T18:00:00Z").toISOString(), indicators: { sleep: 3, avoidance: 8, concentration: 4, irritability: 7, tension: 8, withdrawal: 7, functioning: 4, triggers: "health issues", confidence: 3, support: "Yes, spoke to healthcare professional" } }
-        ]);
-        await supabaseClient.from('coping_plans').insert({
-          user_id: userId,
-          triggers: "Health concerns, news reports",
-          strategies: "Worry postponement, reading books",
-          supports: "Dr. Evans (GP)"
-        });
-        await supabaseClient.from('journal').insert([
-          { user_id: userId, mood: 4, triggers: "Illness", note: "Health anxiety flared up today, tried box breathing.", timestamp: new Date("2026-05-21T18:00:00Z").toISOString() }
-        ]);
-      } else if (u.id === "P-782") {
-        await supabaseClient.from('assessments').insert([
-          { user_id: userId, gad7: [1, 0, 1, 0, 1, 0, 0], score: 3, severity: "Minimal", timestamp: new Date("2026-05-21T18:00:00Z").toISOString(), indicators: { sleep: 8, avoidance: 2, concentration: 9, irritability: 2, tension: 2, withdrawal: 2, functioning: 9, triggers: "none", confidence: 9, support: "No" } }
-        ]);
+
+        if (Math.random() > 0.5) {
+          completions.push({ user_id: userId, recommendation_id: "breathing_exercise", timestamp: new Date(iso).toISOString(), completed: true });
+        }
+
+        if (Math.random() > 0.7) {
+          journals.push({ user_id: userId, mood: Math.min(10, Math.floor(15 - score/1.5)), triggers: "None", note: "Daily journal log.", timestamp: new Date(iso).toISOString() });
+        }
+        
+        currentDate.setDate(currentDate.getDate() + 1);
       }
+
+      await supabaseClient.from('assessments').insert(assessments);
+      if (completions.length > 0) await supabaseClient.from('completions').insert(completions);
+      if (journals.length > 0) await supabaseClient.from('journal').insert(journals);
+
+      await supabaseClient.from('coping_plans').insert({
+        user_id: userId,
+        triggers: "General stress",
+        strategies: "Breathing exercises",
+        supports: "Family"
+      });
     }
 
     console.log("Mock data seeding to Supabase complete.");
@@ -231,7 +216,8 @@ const DB = {
       participantId: participantId,
       fullName: fullName,
       isConsentGiven: isResearcher ? true : false,
-      isAdmin: isResearcher
+      isAdmin: isResearcher,
+      registrationDate: new Date().toISOString()
     };
 
     return { success: true, user: sessionUser };
@@ -267,7 +253,8 @@ const DB = {
       participantId: profile ? profile.participant_id : "ANON",
       fullName: profile ? (profile.full_name || "Participant") : "Participant",
       isConsentGiven: isResearcher ? true : (profile ? profile.is_consent_given : false),
-      isAdmin: isResearcher
+      isAdmin: isResearcher,
+      registrationDate: profile ? profile.registration_date : new Date().toISOString()
     };
 
     return { success: true, user: loggedUser };
@@ -293,7 +280,8 @@ const DB = {
       participantId: profile ? profile.participant_id : "ANON",
       fullName: session.user.user_metadata ? (session.user.user_metadata.full_name || "Participant") : "Participant",
       isConsentGiven: isResearcher ? true : (profile ? profile.is_consent_given : false),
-      isAdmin: isResearcher
+      isAdmin: isResearcher,
+      registrationDate: profile ? profile.registration_date : new Date().toISOString()
     };
     
     return userObj;
@@ -554,6 +542,7 @@ const DB = {
    * Used by the analysis scope selector in the admin panel.
    */
   async getParticipantProfiles() {
+    if (window.MOCK_DASHBOARD_DATA) return window.MOCK_DASHBOARD_DATA.profiles;
     const { data: profiles } = await supabaseClient
       .from('profiles')
       .select('*')
@@ -571,15 +560,26 @@ const DB = {
     });
   },
 
+
   async getAdminData() {
-    const { data: profiles } = await supabaseClient
-      .from('profiles')
-      .select('*')
-      .eq('is_admin', false);
+    let profiles, assessments, completions, feedback;
     
-    const assessments = await fetchAllRows('assessments');
-    const completions = await fetchAllRows('completions');
-    const feedback = await fetchAllRows('feedback');
+    if (window.MOCK_DASHBOARD_DATA) {
+      profiles = window.MOCK_DASHBOARD_DATA.profiles;
+      assessments = window.MOCK_DASHBOARD_DATA.assessments;
+      completions = window.MOCK_DASHBOARD_DATA.completions;
+      feedback = window.MOCK_DASHBOARD_DATA.feedback || [];
+    } else {
+      const pRes = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('is_admin', false);
+      profiles = pRes.data;
+      
+      assessments = await fetchAllRows('assessments');
+      completions = await fetchAllRows('completions');
+      feedback = await fetchAllRows('feedback');
+    }
 
     return (profiles || []).map(p => {
       const userAssess = (assessments || [])
@@ -600,6 +600,36 @@ const DB = {
       };
     });
   },
+  async getParticipantProfiles() {
+    if (window.MOCK_DASHBOARD_DATA) {
+      return window.MOCK_DASHBOARD_DATA.profiles.map(p => {
+        const count = window.MOCK_DASHBOARD_DATA.assessments.filter(a => a.user_id === p.id).length;
+        return {
+          userId: p.id,
+          participantId: p.participant_id,
+          assessmentCount: count
+        };
+      });
+    }
+    const { data: profiles } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('is_admin', false);
+
+    const assessments = await fetchAllRows('assessments', 'user_id');
+
+    return (profiles || []).map(p => {
+      const count = (assessments || []).filter(a => a.user_id === p.id).length;
+      return {
+        userId: p.id,
+        participantId: p.participant_id,
+        assessmentCount: count
+      };
+    });
+  },
+
+
+
 
   async getAllAssessmentsRaw() {
     const { data: profiles } = await supabaseClient
