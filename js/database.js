@@ -632,6 +632,39 @@ const DB = {
 
 
   async getAllAssessmentsRaw() {
+    if (window.MOCK_DASHBOARD_DATA) {
+      const profiles = window.MOCK_DASHBOARD_DATA.profiles;
+      const assessments = [...window.MOCK_DASHBOARD_DATA.assessments];
+      assessments.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+      return (assessments || []).map(a => {
+        const p = (profiles || []).find(prof => prof.id === a.user_id);
+        return {
+          participantId: p ? p.participant_id : "ANON",
+          timestamp: new Date(a.timestamp).toISOString(),
+          gad7_q1: a.gad7[0],
+          gad7_q2: a.gad7[1],
+          gad7_q3: a.gad7[2],
+          gad7_q4: a.gad7[3],
+          gad7_q5: a.gad7[4],
+          gad7_q6: a.gad7[5],
+          gad7_q7: a.gad7[6],
+          gad7_total: a.score,
+          anxiety_severity: a.severity,
+          ind_sleep: a.indicators.sleep,
+          ind_avoidance: a.indicators.avoidance,
+          ind_concentration: a.indicators.concentration,
+          ind_irritability: a.indicators.irritability,
+          ind_tension: a.indicators.tension,
+          ind_withdrawal: a.indicators.withdrawal,
+          ind_functioning: a.indicators.functioning,
+          ind_triggers: a.indicators.triggers.replace(/,/g, ";"),
+          ind_confidence: a.indicators.confidence,
+          ind_support: a.indicators.support
+        };
+      });
+    }
+
     const { data: profiles } = await supabaseClient
       .from('profiles')
       .select('*');
@@ -668,6 +701,60 @@ const DB = {
   },
 
   async getParticipantDetailData(participantId) {
+    if (window.MOCK_DASHBOARD_DATA) {
+      const profile = window.MOCK_DASHBOARD_DATA.profiles.find(p => p.participant_id === participantId);
+      if (!profile) return null;
+      const userId = profile.id;
+
+      const assessments = window.MOCK_DASHBOARD_DATA.assessments.filter(a => a.user_id === userId);
+      const coping = window.MOCK_DASHBOARD_DATA.coping_plans.find(c => c.user_id === userId);
+      const completions = window.MOCK_DASHBOARD_DATA.completions.filter(c => c.user_id === userId);
+      const journal = window.MOCK_DASHBOARD_DATA.journals.filter(j => j.user_id === userId);
+      const feedback = window.MOCK_DASHBOARD_DATA.feedback?.find(f => f.user_id === userId);
+
+      return {
+        participantId: profile.participant_id,
+        fullName: profile.full_name,
+        registrationDate: profile.registration_date,
+        assessments: (assessments || []).map(a => ({
+          id: a.id,
+          timestamp: new Date(a.timestamp).getTime(),
+          gad7: a.gad7,
+          indicators: a.indicators,
+          score: a.score,
+          severity: a.severity || getSeverityFromScore(a.score)
+        })),
+        coping: coping ? {
+          triggers: coping.triggers || "",
+          strategies: coping.strategies || "",
+          supports: coping.supports || ""
+        } : null,
+        completions: (completions || []).map(c => ({
+          id: c.id,
+          recommendationId: c.recommendation_id,
+          timestamp: new Date(c.timestamp).getTime(),
+          completed: c.completed
+        })),
+        journal: (journal || []).map(j => ({
+          id: j.id,
+          timestamp: new Date(j.timestamp).getTime(),
+          mood: j.mood,
+          triggers: j.triggers || "",
+          note: j.note
+        })),
+        feedback: feedback ? {
+          usability: feedback.usability,
+          clarity: feedback.clarity,
+          trust: feedback.trust,
+          usefulness: feedback.usefulness,
+          personalization: feedback.personalization,
+          ruleUnderstanding: feedback.rule_understanding,
+          continueUse: feedback.continue_use,
+          openText: feedback.open_text
+        } : null
+      };
+    }
+
     const { data: profile } = await supabaseClient
       .from('profiles')
       .select('*')
@@ -751,6 +838,24 @@ const DB = {
   },
 
   async getCohortAnalyticsData() {
+    if (window.MOCK_DASHBOARD_DATA) {
+      const assessments = [...window.MOCK_DASHBOARD_DATA.assessments];
+      const feedback = [...(window.MOCK_DASHBOARD_DATA.feedback || [])];
+      const journal = [...window.MOCK_DASHBOARD_DATA.journals];
+      const completions = [...window.MOCK_DASHBOARD_DATA.completions];
+
+      // Sort by timestamp
+      assessments.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      journal.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+      return {
+        assessments: assessments || [],
+        feedback: feedback || [],
+        journal: journal || [],
+        completions: completions || []
+      };
+    }
+
     const assessments = await fetchAllRows('assessments');
     const feedback = await fetchAllRows('feedback');
     const journal = await fetchAllRows('journal');
@@ -874,15 +979,25 @@ const DB = {
   },
 
   async getInteractiveCohortDataset() {
-    const { data: profiles } = await supabaseClient
-      .from('profiles')
-      .select('*')
-      .eq('is_admin', false);
+    let profiles, assessments, completions, feedback, journal;
+    if (window.MOCK_DASHBOARD_DATA) {
+      profiles = window.MOCK_DASHBOARD_DATA.profiles;
+      assessments = window.MOCK_DASHBOARD_DATA.assessments;
+      completions = window.MOCK_DASHBOARD_DATA.completions;
+      feedback = window.MOCK_DASHBOARD_DATA.feedback || [];
+      journal = window.MOCK_DASHBOARD_DATA.journals;
+    } else {
+      const { data: pRes } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('is_admin', false);
+      profiles = pRes || [];
 
-    const assessments = await fetchAllRows('assessments');
-    const completions = await fetchAllRows('completions');
-    const feedback = await fetchAllRows('feedback');
-    const journal = await fetchAllRows('journal');
+      assessments = await fetchAllRows('assessments');
+      completions = await fetchAllRows('completions');
+      feedback = await fetchAllRows('feedback');
+      journal = await fetchAllRows('journal');
+    }
 
     const profs = profiles || [];
     const assess = assessments || [];
