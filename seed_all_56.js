@@ -127,7 +127,6 @@ async function seedUserData(userId, i) {
   await supabaseClient.from('profiles').upsert({
     id: userId,
     participant_id: `P-${1000+i}`,
-    full_name: fullName,
     is_consent_given: true,
     is_admin: false,
     registration_date: new Date("2026-05-21T10:00:00Z").toISOString()
@@ -193,7 +192,7 @@ async function seedUserData(userId, i) {
     }
 
     if (Math.random() > 0.6) {
-      const moodVal = Math.round(Math.max(1, Math.min(10, 10 - score * 0.45)) * 10) / 10;
+      const moodVal = Math.round(Math.max(1, Math.min(10, 10 - score * 0.45)));
       journals.push({
         user_id: userId,
         mood: moodVal,
@@ -236,16 +235,7 @@ async function seedUserData(userId, i) {
 }
 
 async function run() {
-  console.log("Step 1: Wiping old assessment/journal/completion data...");
-  const fakeUuid = '00000000-0000-0000-0000-000000000000';
-  await supabaseClient.from('feedback').delete().neq('id', fakeUuid);
-  await supabaseClient.from('assessments').delete().neq('id', fakeUuid);
-  await supabaseClient.from('journal').delete().neq('id', fakeUuid);
-  await supabaseClient.from('completions').delete().neq('id', fakeUuid);
-  await supabaseClient.from('coping_plans').delete().neq('user_id', fakeUuid);
-  console.log("  Old data wiped.");
-
-  console.log("\nStep 2: Creating/finding 56 users and seeding data...");
+  console.log("Seeding 56 users (no wipe — preserving existing data)...");
   let successCount = 0;
   let failedUsers = [];
 
