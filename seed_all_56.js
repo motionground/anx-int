@@ -82,143 +82,210 @@ const feedbackTexts = [
   "Easy to navigate and complete assessments daily."
 ];
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function getOrCreateUser(email, i) {
+  // Try sign up first
+  const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
+    email: email,
+    password: "pass123",
+    options: { data: { participant_id: `P-${1000+i}`, full_name: `${firstNames[(i-1) % firstNames.length]} ${lastNames[(i-1) % lastNames.length]}` } }
+  });
+
+  if (!signUpError && signUpData?.user?.id) {
+    return signUpData.user.id;
+  }
+
+  // If already registered, try sign in
+  if (signUpError && signUpError.message.includes('already registered')) {
+    const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: "pass123"
+    });
+    if (!signInError && signInData?.user?.id) {
+      return signInData.user.id;
+    }
+    if (signInError) {
+      console.log(`  Sign-in also failed for ${email}: ${signInError.message}`);
+    }
+  }
+
+  // Rate limit — need to retry
+  if (signUpError && signUpError.message.includes('rate limit')) {
+    return null; // caller will handle retry
+  }
+
+  console.log(`  Unexpected error for ${email}: ${signUpError?.message}`);
+  return null;
+}
+
+async function seedUserData(userId, i) {
+  const fullName = `${firstNames[(i-1) % firstNames.length]} ${lastNames[(i-1) % lastNames.length]}`;
+
+  await supabaseClient.from('profiles').upsert({
+    id: userId,
+    participant_id: `P-${1000+i}`,
+    full_name: fullName,
+    is_consent_given: true,
+    is_admin: false,
+    registration_date: new Date("2026-05-21T10:00:00Z").toISOString()
+  });
+
+  const assessments = [];
+  const completions = [];
+  const journals = [];
+
+  let currentDate = new Date("2026-05-21T18:00:00Z");
+  const endDate = new Date("2026-06-06T18:00:00Z");
+  let score = 5 + Math.floor(Math.random() * 16);
+
+  while (currentDate <= endDate) {
+    const iso = currentDate.toISOString();
+
+    if (score > 5 && Math.random() > 0.35) score--;
+    else if (score < 20 && Math.random() > 0.85) score++;
+
+    let severity;
+    if (score >= 15) severity = "Severe";
+    else if (score >= 10) severity = "Moderate";
+    else if (score >= 5) severity = "Mild";
+    else severity = "Minimal";
+
+    const perItem = Math.floor(score / 7);
+    const remainder = score % 7;
+    const gad7 = [perItem, perItem, perItem, perItem, perItem, perItem, remainder];
+
+    const sleepVal = Math.round(Math.max(2, Math.min(10, 10 - score * 0.4)) * 10) / 10;
+    const avoidVal = Math.round(Math.min(10, score * 0.6) * 10) / 10;
+    const concVal = Math.round(Math.max(2, 10 - score * 0.3) * 10) / 10;
+    const irrVal = Math.round(Math.min(10, score * 0.5) * 10) / 10;
+    const tensVal = Math.round(Math.min(10, score * 0.55) * 10) / 10;
+    const withVal = Math.round(Math.min(10, score * 0.45) * 10) / 10;
+    const funcVal = Math.round(Math.max(2, 10 - score * 0.35) * 10) / 10;
+
+    const trigger = triggerOptions[Math.floor(Math.random() * triggerOptions.length)];
+    const confVal = Math.round(Math.max(1, 10 - score * 0.4) * 10) / 10;
+    const supportOptions = ["Yes","No","Yes, spoke to family/friend","Yes, spoke to healthcare professional"];
+    const support = supportOptions[Math.floor(Math.random() * supportOptions.length)];
+
+    assessments.push({
+      user_id: userId,
+      gad7: gad7,
+      score: score,
+      severity: severity,
+      timestamp: iso,
+      indicators: {
+        sleep: sleepVal, avoidance: avoidVal, concentration: concVal,
+        irritability: irrVal, tension: tensVal, withdrawal: withVal,
+        functioning: funcVal, triggers: trigger, confidence: confVal, support: support
+      }
+    });
+
+    if (Math.random() > 0.4) {
+      completions.push({
+        user_id: userId,
+        recommendation_id: recOptions[Math.floor(Math.random() * recOptions.length)],
+        timestamp: iso,
+        completed: true
+      });
+    }
+
+    if (Math.random() > 0.6) {
+      const moodVal = Math.round(Math.max(1, Math.min(10, 10 - score * 0.45)) * 10) / 10;
+      journals.push({
+        user_id: userId,
+        mood: moodVal,
+        triggers: trigger,
+        note: journalNotes[Math.floor(Math.random() * journalNotes.length)],
+        timestamp: iso
+      });
+    }
+
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  await supabaseClient.from('assessments').insert(assessments);
+  if (completions.length > 0) await supabaseClient.from('completions').insert(completions);
+  if (journals.length > 0) await supabaseClient.from('journal').insert(journals);
+
+  // Coping plan
+  // First delete any existing one for this user
+  await supabaseClient.from('coping_plans').delete().eq('user_id', userId);
+  await supabaseClient.from('coping_plans').insert({
+    user_id: userId,
+    triggers: trigSets[i % trigSets.length],
+    strategies: stratSets[i % stratSets.length],
+    supports: suppSets[i % suppSets.length]
+  });
+
+  // Feedback — delete existing first
+  await supabaseClient.from('feedback').delete().eq('user_id', userId);
+  await supabaseClient.from('feedback').insert({
+    user_id: userId,
+    usability: Math.floor(Math.random() * 3) + 3,
+    clarity: Math.floor(Math.random() * 3) + 3,
+    trust: Math.floor(Math.random() * 3) + 3,
+    usefulness: Math.floor(Math.random() * 3) + 3,
+    personalization: Math.floor(Math.random() * 3) + 3,
+    rule_understanding: Math.floor(Math.random() * 3) + 3,
+    continue_use: Math.floor(Math.random() * 3) + 3,
+    open_text: feedbackTexts[Math.floor(Math.random() * feedbackTexts.length)]
+  });
+}
+
 async function run() {
-  console.log("Wiping old data...");
+  console.log("Step 1: Wiping old assessment/journal/completion data...");
   const fakeUuid = '00000000-0000-0000-0000-000000000000';
   await supabaseClient.from('feedback').delete().neq('id', fakeUuid);
   await supabaseClient.from('assessments').delete().neq('id', fakeUuid);
   await supabaseClient.from('journal').delete().neq('id', fakeUuid);
   await supabaseClient.from('completions').delete().neq('id', fakeUuid);
   await supabaseClient.from('coping_plans').delete().neq('user_id', fakeUuid);
-  await supabaseClient.from('profiles').delete().neq('participant_id', '0');
+  console.log("  Old data wiped.");
 
-  console.log("Seeding 56 users with rich data...");
+  console.log("\nStep 2: Creating/finding 56 users and seeding data...");
+  let successCount = 0;
+  let failedUsers = [];
 
-  for(let i=1; i<=56; i++) {
+  for (let i = 1; i <= 56; i++) {
     const email = `participant${i}@v5.test.com`;
-    const { data, error } = await supabaseClient.auth.signUp({
-      email: email,
-      password: "pass123",
-      options: { data: { participant_id: `P-${1000+i}`, full_name: `${firstNames[(i-1) % firstNames.length]} ${lastNames[(i-1) % lastNames.length]}` } }
-    });
-    if (error) {
-      console.log(`Error for ${email}:`, error.message);
+
+    // Add delay every 2 users to avoid rate limiting
+    if (i > 1) {
+      await sleep(2000);
+    }
+
+    let userId = null;
+    let retries = 0;
+    
+    while (!userId && retries < 5) {
+      if (retries > 0) {
+        const waitSec = 6 * retries;
+        console.log(`  Retry ${retries} for user ${i} (waiting ${waitSec}s)...`);
+        await sleep(waitSec * 1000);
+      }
+      userId = await getOrCreateUser(email, i);
+      retries++;
+    }
+
+    if (!userId) {
+      console.log(`  FAILED user ${i} after retries — skipping data.`);
+      failedUsers.push(i);
       continue;
     }
-    const userId = data.user.id;
 
-    await supabaseClient.from('profiles').upsert({
-      id: userId,
-      participant_id: `P-${1000+i}`,
-      full_name: `${firstNames[(i-1) % firstNames.length]} ${lastNames[(i-1) % lastNames.length]}`,
-      is_consent_given: true,
-      is_admin: false,
-      registration_date: new Date("2026-05-21T10:00:00Z").toISOString()
-    });
-
-    const assessments = [];
-    const completions = [];
-    const journals = [];
-
-    let currentDate = new Date("2026-05-21T18:00:00Z");
-    const endDate = new Date("2026-06-06T18:00:00Z");
-    let score = 5 + Math.floor(Math.random() * 16); // 5-20
-
-    while (currentDate <= endDate) {
-      const iso = currentDate.toISOString();
-
-      // Gradual trend downward with some noise
-      if (score > 5 && Math.random() > 0.35) score--;
-      else if (score < 20 && Math.random() > 0.85) score++;
-
-      let severity;
-      if (score >= 15) severity = "Severe";
-      else if (score >= 10) severity = "Moderate";
-      else if (score >= 5) severity = "Mild";
-      else severity = "Minimal";
-
-      const perItem = Math.floor(score / 7);
-      const remainder = score % 7;
-      const gad7 = [perItem, perItem, perItem, perItem, perItem, perItem, remainder];
-
-      const sleepVal = Math.round(Math.max(2, Math.min(10, 10 - score * 0.4)) * 10) / 10;
-      const avoidVal = Math.round(Math.min(10, score * 0.6) * 10) / 10;
-      const concVal = Math.round(Math.max(2, 10 - score * 0.3) * 10) / 10;
-      const irrVal = Math.round(Math.min(10, score * 0.5) * 10) / 10;
-      const tensVal = Math.round(Math.min(10, score * 0.55) * 10) / 10;
-      const withVal = Math.round(Math.min(10, score * 0.45) * 10) / 10;
-      const funcVal = Math.round(Math.max(2, 10 - score * 0.35) * 10) / 10;
-
-      const trigger = triggerOptions[Math.floor(Math.random() * triggerOptions.length)];
-      const confVal = Math.round(Math.max(1, 10 - score * 0.4) * 10) / 10;
-      const supportOptions = ["Yes","No","Yes, spoke to family/friend","Yes, spoke to healthcare professional"];
-      const support = supportOptions[Math.floor(Math.random() * supportOptions.length)];
-
-      assessments.push({
-        user_id: userId,
-        gad7: gad7,
-        score: score,
-        severity: severity,
-        timestamp: iso,
-        indicators: {
-          sleep: sleepVal, avoidance: avoidVal, concentration: concVal,
-          irritability: irrVal, tension: tensVal, withdrawal: withVal,
-          functioning: funcVal, triggers: trigger, confidence: confVal, support: support
-        }
-      });
-
-      // ~60% chance of a completion each day
-      if (Math.random() > 0.4) {
-        completions.push({
-          user_id: userId,
-          recommendation_id: recOptions[Math.floor(Math.random() * recOptions.length)],
-          timestamp: iso,
-          completed: true
-        });
-      }
-
-      // ~40% chance of journal each day
-      if (Math.random() > 0.6) {
-        const moodVal = Math.round(Math.max(1, Math.min(10, 10 - score * 0.45)) * 10) / 10;
-        journals.push({
-          user_id: userId,
-          mood: moodVal,
-          triggers: trigger,
-          note: journalNotes[Math.floor(Math.random() * journalNotes.length)],
-          timestamp: iso
-        });
-      }
-
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-
-    await supabaseClient.from('assessments').insert(assessments);
-    if (completions.length > 0) await supabaseClient.from('completions').insert(completions);
-    if (journals.length > 0) await supabaseClient.from('journal').insert(journals);
-
-    // Coping plan with varied triggers
-    await supabaseClient.from('coping_plans').insert({
-      user_id: userId,
-      triggers: trigSets[i % trigSets.length],
-      strategies: stratSets[i % stratSets.length],
-      supports: suppSets[i % suppSets.length]
-    });
-
-    // Feedback for every participant
-    await supabaseClient.from('feedback').insert({
-      user_id: userId,
-      usability: Math.floor(Math.random() * 3) + 3,
-      clarity: Math.floor(Math.random() * 3) + 3,
-      trust: Math.floor(Math.random() * 3) + 3,
-      usefulness: Math.floor(Math.random() * 3) + 3,
-      personalization: Math.floor(Math.random() * 3) + 3,
-      rule_understanding: Math.floor(Math.random() * 3) + 3,
-      continue_use: Math.floor(Math.random() * 3) + 3,
-      open_text: feedbackTexts[Math.floor(Math.random() * feedbackTexts.length)]
-    });
-
-    if (i % 10 === 0) console.log(`Seeded ${i}/56...`);
+    await seedUserData(userId, i);
+    successCount++;
+    if (i % 10 === 0) console.log(`  Seeded ${i}/56 (${successCount} success)...`);
   }
-  console.log("Completely done!");
+
+  console.log(`\nDone! Successfully seeded: ${successCount}/56`);
+  if (failedUsers.length > 0) {
+    console.log(`Failed users: ${failedUsers.join(', ')}`);
+    console.log("Run the script again to retry failed users.");
+  }
 }
+
 run();
