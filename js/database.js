@@ -15,12 +15,7 @@ if (!window.supabase) {
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 console.log("Centralized database activated: Connected to Supabase Cloud.");
 
-const useMockData = !!(window.MOCK_DASHBOARD_DATA && (
-  window.location.hostname === "localhost" || 
-  window.location.hostname === "127.0.0.1" || 
-  window.location.hostname === "" || 
-  new URLSearchParams(window.location.search).has("mock")
-));
+const useMockData = !!(window.MOCK_DASHBOARD_DATA && new URLSearchParams(window.location.search).has("mock"));
 
 function getSeverityFromScore(score) {
   const numericScore = Number(score) || 0;
