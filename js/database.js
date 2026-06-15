@@ -15,6 +15,13 @@ if (!window.supabase) {
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 console.log("Centralized database activated: Connected to Supabase Cloud.");
 
+const useMockData = !!(window.MOCK_DASHBOARD_DATA && (
+  window.location.hostname === "localhost" || 
+  window.location.hostname === "127.0.0.1" || 
+  window.location.hostname === "" || 
+  new URLSearchParams(window.location.search).has("mock")
+));
+
 function getSeverityFromScore(score) {
   const numericScore = Number(score) || 0;
   if (numericScore >= 15) return "Severe";
@@ -536,35 +543,11 @@ const DB = {
 
   // --- RESEARCH ADMINISTRATOR & Spreadsheets ---
 
-  /*
-   * Returns a lightweight array of non-admin participant profiles
-   * with their Supabase user_id and assessment count.
-   * Used by the analysis scope selector in the admin panel.
-   */
-  async getParticipantProfiles() {
-    if (window.MOCK_DASHBOARD_DATA) return window.MOCK_DASHBOARD_DATA.profiles;
-    const { data: profiles } = await supabaseClient
-      .from('profiles')
-      .select('*')
-      .eq('is_admin', false);
-
-    const assessments = await fetchAllRows('assessments', 'user_id');
-
-    return (profiles || []).map(p => {
-      const count = (assessments || []).filter(a => a.user_id === p.id).length;
-      return {
-        userId: p.id,
-        participantId: p.participant_id,
-        assessmentCount: count
-      };
-    });
-  },
-
 
   async getAdminData() {
     let profiles, assessments, completions, feedback;
     
-    if (window.MOCK_DASHBOARD_DATA) {
+    if (useMockData) {
       profiles = window.MOCK_DASHBOARD_DATA.profiles;
       assessments = window.MOCK_DASHBOARD_DATA.assessments;
       completions = window.MOCK_DASHBOARD_DATA.completions;
@@ -601,7 +584,7 @@ const DB = {
     });
   },
   async getParticipantProfiles() {
-    if (window.MOCK_DASHBOARD_DATA) {
+    if (useMockData) {
       return window.MOCK_DASHBOARD_DATA.profiles.map(p => {
         const count = window.MOCK_DASHBOARD_DATA.assessments.filter(a => a.user_id === p.id).length;
         return {
@@ -632,7 +615,7 @@ const DB = {
 
 
   async getAllAssessmentsRaw() {
-    if (window.MOCK_DASHBOARD_DATA) {
+    if (useMockData) {
       const profiles = window.MOCK_DASHBOARD_DATA.profiles;
       const assessments = [...window.MOCK_DASHBOARD_DATA.assessments];
       assessments.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
@@ -701,7 +684,7 @@ const DB = {
   },
 
   async getParticipantDetailData(participantId) {
-    if (window.MOCK_DASHBOARD_DATA) {
+    if (useMockData) {
       const profile = window.MOCK_DASHBOARD_DATA.profiles.find(p => p.participant_id === participantId);
       if (!profile) return null;
       const userId = profile.id;
@@ -838,7 +821,7 @@ const DB = {
   },
 
   async getCohortAnalyticsData() {
-    if (window.MOCK_DASHBOARD_DATA) {
+    if (useMockData) {
       const assessments = [...window.MOCK_DASHBOARD_DATA.assessments];
       const feedback = [...(window.MOCK_DASHBOARD_DATA.feedback || [])];
       const journal = [...window.MOCK_DASHBOARD_DATA.journals];
@@ -980,7 +963,7 @@ const DB = {
 
   async getInteractiveCohortDataset() {
     let profiles, assessments, completions, feedback, journal;
-    if (window.MOCK_DASHBOARD_DATA) {
+    if (useMockData) {
       profiles = window.MOCK_DASHBOARD_DATA.profiles;
       assessments = window.MOCK_DASHBOARD_DATA.assessments;
       completions = window.MOCK_DASHBOARD_DATA.completions;
