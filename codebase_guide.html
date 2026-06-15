@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ANXI-ASSIST: Codebase, Architecture &amp; Implementation Guide</title>
+  <style>
+    :root {
+      --bg-primary: #ffffff;
+      --text-primary: #1f2937;
+      --text-secondary: #4b5563;
+      --text-muted: #9ca3af;
+      --accent-sage: #4e7d63;
+      --accent-slate: #475569;
+      --alert-red: #991b1b;
+      --border-color: #e5e7eb;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'SFMono-Regular', Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      color: var(--text-primary);
+      background-color: var(--bg-primary);
+      line-height: 1.6;
+      margin: 0;
+      padding: 2.5rem 2rem;
+      max-width: 950px;
+      margin: 0 auto;
+    }
+
+    h1, h2, h3, h4 {
+      color: var(--accent-slate);
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.4rem;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      color: var(--accent-sage);
+      border-bottom: 2px solid var(--accent-sage);
+      margin-top: 0;
+    }
+
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.25rem; border: none; padding: 0; }
+
+    p, li {
+      color: var(--text-secondary);
+      font-size: 0.975rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      border: 1px solid var(--border-color);
+      padding: 0.75rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f8fafc;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      background-color: #f1f5f9;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      color: #0f172a;
+    }
+
+    pre {
+      background-color: #f8fafc;
+      border: 1px solid var(--border-color);
+      padding: 1.25rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      font-size: 0.85rem;
+      color: var(--text-primary);
+    }
+
+    .chart-box {
+      border: 1px solid var(--border-color);
+      padding: 1.5rem;
+      background: #fdfdfd;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .chart-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--border-color);
+      padding: 0.5rem 0;
+    }
+
+    .chart-row:last-child {
+      border-bottom: none;
+    }
+
+    .code-explain {
+      background-color: #fefeff;
+      border-left: 4px solid var(--accent-sage);
+      padding: 0.5rem 1rem;
+      margin: 1rem 0;
+    }
+
+    @media print {
+      body {
+        padding: 0;
+        font-size: 11pt;
+      }
+      h1, h2, h3, h4 {
+        page-break-after: avoid;
+      }
+      pre, table, .chart-box {
+        page-break-inside: avoid;
+      }
+      .no-print {
+        display: none;
+      }
+      @page {
+        margin: 2cm;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 1rem; border-radius: 6px; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+    <span style="color: var(--accent-sage); font-weight: 600; font-size: 0.95rem;">💡 Tip: You can print this page directly to PDF (Cmd + P -> Save as PDF) for a beautifully formatted report document.</span>
+    <button onclick="window.print()" style="background: var(--accent-sage); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-weight: 600; cursor: pointer;">Print to PDF</button>
+  </div>
+
+  <h1>ANXI-ASSIST: Codebase, Architecture &amp; Implementation Guide</h1>
+  <p>This guide explains <strong>ANXI-ASSIST</strong> (Digital Anxiety Intervention Research Study Platform) in simple terms. It is designed to prepare you to present and defend the project's codebase, data schemas, clinical logic, and mathematics.</p>
+
+  <h2>1. General Architecture &amp; Technology Stack</h2>
+  <p>ANXI-ASSIST is built as a **Single Page Application (SPA)** with a lightweight frontend and a cloud database backend. The system is designed to load instantly and run efficiently without heavy frameworks:</p>
+  
+  <ul>
+    <li><strong>HTML5 &amp; CSS3 Layout:</strong> Standard layouts configured via system classes. Theme attributes are controlled through central CSS variables for unified, fast styling.</li>
+    <li><strong>Vanilla JavaScript (ES6+):</strong> Handles app routing, interactive features, rule evaluation, and statistical math entirely client-side without using heavy frameworks (like React or Angular).</li>
+    <li><strong>Supabase Cloud Database:</strong> A cloud backend based on PostgreSQL that provides user authentication and secure database storage. Connection is managed directly in JavaScript via the official Supabase library.</li>
+    <li><strong>Library-Free SVG Visualization:</strong> Graphs are drawn directly as vector code (SVG tags) generated by JavaScript. This eliminates heavy rendering packages, keeping code clean and responsive.</li>
+  </ul>
+
+  <h2>2. Database Schema &amp; Data Flow</h2>
+  <p>Relational tables map participants to their logs. The tables are configured on Supabase with the following fields and relationships:</p>
+
+  <table class="no-break">
+    <thead>
+      <tr>
+        <th>Table Name</th>
+        <th>Key Fields</th>
+        <th>Relationship / Purpose</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>profiles</strong></td>
+        <td><code>id</code> (UUID), <code>participant_id</code> (e.g. P-1001), <code>is_admin</code></td>
+        <td><strong>1-to-1</strong> with Supabase Auth users. Identifies participant roles anonymously.</td>
+      </tr>
+      <tr>
+        <td><strong>assessments</strong></td>
+        <td><code>user_id</code> (FK), <code>gad7</code> (scores), <code>indicators</code> (JSON)</td>
+        <td><strong>1-to-Many</strong> with profiles. Holds weekly anxiety surveys and parameters (sleep, avoidance, tension).</td>
+      </tr>
+      <tr>
+        <td><strong>journal</strong></td>
+        <td><code>user_id</code> (FK), <code>mood</code> (1-10), <code>note</code> (text)</td>
+        <td><strong>1-to-Many</strong> with profiles. Captures daily qualitative logs.</td>
+      </tr>
+      <tr>
+        <td><strong>completions</strong></td>
+        <td><code>user_id</code> (FK), <code>recommendation_id</code> (text)</td>
+        <td><strong>1-to-Many</strong> with profiles. Tracks completed coping tasks.</td>
+      </tr>
+      <tr>
+        <td><strong>coping_plans</strong></td>
+        <td><code>user_id</code> (PK, FK), <code>triggers</code>, <code>strategies</code></td>
+        <td><strong>1-to-1</strong> with profiles. Stores participant safety plans.</td>
+      </tr>
+      <tr>
+        <td><strong>feedback</strong></td>
+        <td><code>user_id</code> (PK, FK), usability scores (1-5)</td>
+        <td><strong>1-to-1</strong> with profiles. Stores final usability survey ratings.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="code-explain">
+    <strong>Simplified Data Flow:</strong>
+    <ol>
+      <li><strong>Registration:</strong> A user signs up in [js/database.js](file:///Users/wiz/midlevel/js/database.js) using <code>signUp()</code>. Supabase adds them to internal auth, returns a UUID, and the code inserts a corresponding row in the <code>profiles</code> table with <code>is_admin = false</code>.</li>
+      <li><strong>Logging:</strong> When a user logs an assessment or journal entry, the code inserts a row into the database linking it to the active user's UUID.</li>
+      <li><strong>Researcher Inspection:</strong> The researcher logs in, gets redirected to `#admin`, and queries all cohort data securely.</li>
+    </ol>
+  </div>
+
+  <h2>3. Core Javascript Files &amp; Routing</h2>
+  <p>The frontend behaves like a single desktop dashboard but runs within a single page using a hash-change router:</p>
+  <ul>
+    <li><strong>[index.html](file:///Users/wiz/midlevel/index.html)</strong>: The structural document. Contains all views (auth page, dashboard, progress page, admin panel) inside discrete <code>&lt;section class="view"&gt;</code> containers.</li>
+    <li><strong>[js/app.js](file:///Users/wiz/midlevel/js/app.js)</strong>: 
+      <ul>
+        <li><strong>SPA Routing (<code>handleRouting()</code>):</strong> Reads the URL hash (e.g. <code>#dashboard</code>) and toggles CSS active classes on view containers to transition screens without page refreshes.</li>
+        <li><strong>Dynamic SVG Drawing (<code>drawProgressGraph()</code>):</strong> Computes chart coordinates and outputs raw HTML vector tags (<code>&lt;rect&gt;</code>, <code>&lt;path&gt;</code>) to render the progress trends dynamically.</li>
+      </ul>
+    </li>
+    <li><strong>[js/database.js](file:///Users/wiz/midlevel/js/database.js)</strong>: Handles API calls to Supabase. Includes the <code>fetchAllRows()</code> function, which implements paginated chunking (retrieving rows in batches of 1,000) to bypass Supabase's default row retrieval limit.</li>
+  </ul>
+
+  <h2>4. How Clinical Coping Recommendations Are Evaluated</h2>
+  <p>Instead of using statistical black-box AI, recommendations are generated through deterministic rules in [js/rules.js](file:///Users/wiz/midlevel/js/rules.js) under <code>RulesEngine.evaluateRules()</code>. This guarantees clinical safety and auditing transparency:</p>
+
+  <div class="code-explain">
+    <strong>Clinical Logic Catalog:</strong>
+    <ul>
+      <li><strong>Severe Anxiety Rule:</strong> If GAD-7 score $\ge 15$, recommend <em>Crisis Guidance &amp; Emergency Support</em>.</li>
+      <li><strong>Muscle Tension Rule:</strong> If somatic physical tension rating $> 6$, recommend <em>Progressive Muscle Relaxation</em> exercises.</li>
+      <li><strong>Sleep Impairment Rule:</strong> If sleep quality score $< 5$, recommend <em>Sleep Hygiene Protocols</em>.</li>
+      <li><strong>Avoidance Response Rule:</strong> If avoidance score $> 6$, recommend <em>Systematic Avoidance Desensitization &amp; Cognitive Reframing</em>.</li>
+      <li><strong>Impact on Functioning Rule:</strong> If GAD-7 $\ge 10$ and daily chores functioning rating $< 5$, recommend <em>Worry Postponement &amp; Attention Training</em>.</li>
+      <li><strong>Mild Anxiety Rule:</strong> If GAD-7 is between $5$ and $14$ (Mild/Moderate), recommend <em>Mindful Box Breathing</em>.</li>
+      <li><strong>Worsening Symptom Trend Rule:</strong> If the latest GAD-7 score is higher than the previous score, recommend <em>Additional Coping Plan Review</em>.</li>
+    </ul>
+  </div>
+
+  <h2>5. How Statistical Analyses Are Calculated</h2>
+  <p>The statistical analyses in the researcher dashboard ([js/statistics.js](file:///Users/wiz/midlevel/js/statistics.js)) are computed from scratch on the client-side using pure mathematical algorithms:</p>
+
+  <h3>A. Multiple Linear Regression (Anxiety Predictors)</h3>
+  <p><strong>Goal:</strong> Determine how sleep quality ($x_1$), avoidance behavior ($x_2$), muscle tension ($x_3$), and engagement ($x_4$) predict GAD-7 anxiety scores ($Y$) using the linear model:</p>
+  <p style="text-align: center; font-family: monospace; font-size: 1.1rem;">Y = β₀ + β₁x₁ + β₂x₂ + β₃x₃ + β₄x₄ + ε</p>
+
+  <div class="code-explain">
+    <strong>How the Code Computes Regression:</strong>
+    <ol>
+      <li><strong>Design Matrix (X):</strong> The code builds a matrix $X$ where each row represents a check-in record, starting with a <code>1</code> (for the intercept coefficient $\beta_0$) followed by the predictor scores.</li>
+      <li><strong>Solving Matrix Normal Equations:</strong> Linear coefficients are calculated using the Ordinary Least Squares formula:
+        <br><strong style="font-family: var(--font-mono); font-size: 0.95rem; display: block; margin: 0.4rem 0; text-align: center;">beta = (XᵀX)⁻¹ Xᵀy</strong>
+        where $X^T$ is the matrix transpose, and $(X^T X)^{-1}$ is the matrix inverse.
+      </li>
+      <li><strong>Gaussian Row Elimination (Matrix Inversion):</strong> Inverting a matrix in JavaScript requires a custom solver. The function <code>matInvert()</code> implements Gaussian Elimination: it appends an identity matrix to $(X^T X)$ and performs row operations (swapping rows, scaling rows, adding rows) until the left side becomes the identity matrix, leaving the inverse matrix on the right.</li>
+      <li><strong>Variance Explained ($R^2$):</strong> Measures the quality of the model fit. It calculates the total sum of squares ($SS_{\text{tot}}$) and residual sum of squares ($SS_{\text{res}}$):
+        <br><strong style="font-family: var(--font-mono); font-size: 0.95rem; display: block; margin: 0.4rem 0; text-align: center;">R² = 1 - (SS_res / SS_tot)</strong>
+        If $R^2 = 0.50$, it means 50% of the variations in participants' GAD-7 scores are predicted by our model.
+      </li>
+    </ol>
+  </div>
+
+  <h3>B. Paired t-Test (Anxiety Change Significance)</h3>
+  <p><strong>Goal:</strong> Check if the difference between participants' baseline (first check-in) and final GAD-7 scores is scientifically significant, or if it is just random noise.</p>
+
+  <div class="code-explain">
+    <strong>How the Code Computes the t-Test:</strong>
+    <ol>
+      <li><strong>Difference Score ($d_i$):</strong> For each participant, calculates the change in anxiety: $d_i = x_{i,\text{final}} - x_{i,\text{baseline}}$. A negative value indicates improvement.</li>
+      <li><strong>t-Statistic calculation:</strong> Calculates the mean difference $\bar{d}$ and standard deviation $s_d$, then computes the $t$-value:
+        <br><strong style="font-family: var(--font-mono); font-size: 0.95rem; display: block; margin: 0.4rem 0; text-align: center;">t = mean(d) / (std_dev(d) / sqrt(N))</strong>
+      </li>
+      <li><strong>p-Value derivation:</strong> Calculates the two-tailed probability ($p$-value) by integrating the probability density function of Student's $t$-distribution with $N-1$ degrees of freedom. A $p < 0.05$ indicates that the score drop has a $<5\%$ likelihood of being a random occurrence, confirming statistical significance.</li>
+    </ol>
+  </div>
+
+  <h3>C. Natural Language Processing (NLP Text Trigger Analysis)</h3>
+  <p><strong>Goal:</strong> Extract common themes from the free-text description of anxiety triggers entered during assessments.</p>
+  <div class="code-explain">
+    <strong>How the Code Computes NLP:</strong>
+    <ol>
+      <li><strong>Tokenization:</strong> Splits the raw text into individual words, forcing lowercase and stripping special characters.</li>
+      <li><strong>Stop Word Filtering:</strong> The code checks each word against a pre-defined blocklist (<code>STOP_WORDS</code>) containing standard non-informative words (e.g. <em>the, and, of, details, log</em>) and removes them.</li>
+      <li><strong>Frequency Sorting:</strong> Counts occurrences of the remaining words and renders a graphical chart of the top topics.</li>
+    </ol>
+  </div>
+</body>
+</html>
